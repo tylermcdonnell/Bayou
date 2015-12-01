@@ -1,17 +1,17 @@
 package server;
 
-import java.util.ArrayList;
-
 /**
  * Abstraction for a Bayou server.
- * @author tyler
+ * @author tsm
  *
  */
 public class Server implements Runnable {
 
 	// Server's ID.
+	private ServerID ID;
 	
 	// Write Log.
+	
 	
 	/**
 	 * Constructor.
@@ -36,5 +36,8 @@ public class Server implements Runnable {
 		// Primary server logic.
 	}
 	
-	
+	public void antiEntropy(VersionVector RV, int CSN)
+	{
+		
+	}
 }
