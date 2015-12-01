@@ -41,10 +41,12 @@ public class NetController {
 	private final ListenServer listener;
 	
 	// MIKE: added for heart beats, if necessary.
-	private long lastTimeMessageSent;
+	//private long lastTimeMessageSent;
 	
 	// MIKE: added.
-	private final int numClients;
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	//private final int numClients;
 	
 	public NetController(Config config, int numClients) {
 		this.config = config;
@@ -54,17 +56,22 @@ public class NetController {
 		listener.start();
 		
 		// MIKE: added.
-		this.numClients = numClients;
+		//this.numClients = numClients;
 		
 		// MIKE: added.  This way, if a particular NetController has never
 		// sent a message, it can still pass the allClear test.
-		this.lastTimeMessageSent = Long.MIN_VALUE;
+		//this.lastTimeMessageSent = Long.MIN_VALUE;
 	}
 	
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	
+	/*
 	public long lastMessageTime()
 	{
 		return this.lastTimeMessageSent;
 	}
+	*/
 	
 	// Establish outgoing connection to a process
 	private synchronized void initOutgoingConn(int proc) throws IOException {
@@ -133,6 +140,9 @@ public class NetController {
 	}
 	
 	// MIKE: changed for Paxos.
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	/*
 	public boolean sendMsgToClient(int process, Message msg)
 	{
 		// MIKE: added.  Clients don't send each other heart beats, so
@@ -150,8 +160,12 @@ public class NetController {
 			return false;
 		}
 	}
+	*/
 	
 	// Mike: changed for Paxos.
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	/*
 	public boolean sendMsgToServer(int process, Message msg)
 	{
 		// MIKE: added.
@@ -173,6 +187,8 @@ public class NetController {
 			return false;
 		}
 	}
+	*/
+	
 	
 	/**
 	 * Return a list of msgs received on established incoming sockets
@@ -251,25 +267,36 @@ public class NetController {
         }	
 	}
 	
+	
 	/**
-	   * Returns the NetController index for this server.
-	   * 
-	   * @param serverNum, this server's index.
-	   */
-	  public int getServerNetControllerIndex(int serverNum)
-	  {
-		  return this.numClients + serverNum;
-	  }
+	 * Returns the NetController index for this server.
+	 * 
+	 * @param serverNum, this server's index.
+	 */
+	
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	
+	/*
+	public int getServerNetControllerIndex(int serverNum)
+	{
+		return this.numClients + serverNum;
+	}
+	*/
 	  
-	  
-	  /**
-	   * Returns the NetController index for this client.
-	   * 
-	   * @param clientNum, this client's index.
-	   */
-	  public int getClientNetControllerIndex(int clientNum)
-	  {
-		  return clientNum;
-	  }
-
+	/**
+	 * Returns the NetController index for this client.
+	 * 
+	 * @param clientNum, this client's index.
+	 */
+	
+	// MIKE: not used for Bayou -- clients and servers have unique IDs and
+	//       sends have a client or server ID specified.
+	
+	/*
+	public int getClientNetControllerIndex(int clientNum)
+	{
+		return clientNum;
+	}
+	*/
 }
