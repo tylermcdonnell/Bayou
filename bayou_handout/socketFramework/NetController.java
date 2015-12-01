@@ -35,6 +35,17 @@ import message.Message;
  *
  */
 public class NetController {
+	
+	// MIKE: For each net controller that this net controller can talk to,
+	// the value true at the index corresponding to the ID of this array
+	// implies that this net controller can talk to the net controller
+	// with that index. False means they can't talk.
+	private boolean[] canTalkTo;
+	
+	// MIKE: added ID.
+	private final int ID;
+	
+	private final int MAX_NUM_NODES_IN_SYSTEM;
 	private final Config config;
 	private final List<IncomingSock> inSockets;
 	private final OutgoingSock[] outSockets;
@@ -48,7 +59,23 @@ public class NetController {
 	//       sends have a client or server ID specified.
 	//private final int numClients;
 	
-	public NetController(Config config, int numClients) {
+	public NetController(Config config, int numProcesses, int ID)
+	{
+		// MIKE: added.
+		this.MAX_NUM_NODES_IN_SYSTEM = numProcesses;
+		
+		// MIKE: added.
+		this.canTalkTo = new boolean[this.MAX_NUM_NODES_IN_SYSTEM];
+		
+		// MIKE: added.
+		this.ID = ID;
+		
+		// MIKE: initialize array to all true.
+		for (int i = 0; i < canTalkTo.length; i++)
+		{
+			canTalkTo[i] = true;
+		}
+		
 		this.config = config;
 		inSockets = Collections.synchronizedList(new ArrayList<IncomingSock>());
 		listener = new ListenServer(config, inSockets);
@@ -73,6 +100,30 @@ public class NetController {
 	}
 	*/
 	
+	
+	/**
+	 * Breaks the connection from this net controller to the net controller
+	 * with the given ID.
+	 * 
+	 * @param id, the given ID.
+	 */
+	public void breakConnection(int id)
+	{
+		this.canTalkTo[id] = false;
+	}
+	
+	
+	/**
+	 * Restores the connection from this net controller to the net controller
+	 * with the given ID.
+	 * 
+	 * @param id, the given ID.
+	 */
+	public void restoreConnection(int id)
+	{
+		this.canTalkTo[id] = true;
+	}
+	
 	// Establish outgoing connection to a process
 	private synchronized void initOutgoingConn(int proc) throws IOException {
 		
@@ -96,6 +147,13 @@ public class NetController {
 	 * @return bool indicating success
 	 */
 	public synchronized boolean sendMsg(int process, String msg) {
+		
+		// MIKE: added for breaking connections (Bayou).
+		if (!this.canTalkTo[process])
+		{
+			System.out.println("NC " + this.ID + " tried to send to " + process + " -- BROKEN CONNECTION.");
+			return false;
+		}
 		
 		try {
 			if (outSockets[process] == null)
