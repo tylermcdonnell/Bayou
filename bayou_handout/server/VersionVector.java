@@ -29,19 +29,30 @@ public class VersionVector {
 	
 	/**
 	 * Adds a server to the version vector and initializes timestamp.
-	 * @param s				Server ID
-	 * @param timestamp		Initial timestamp
+	 * @param s				Server ID.
+	 * @param timestamp		Initial timestamp.
 	 */
 	public void add(ServerID s, int timestamp)
 	{
 		this.vector.put(s, 0);
 	}
 	
+	/**
+	 * Updates the most recent accept stamp for a server.
+	 * 
+	 * @param s				Server to update.
+	 * @param timestamp		Most recent accept stamp.
+	 */
 	public void update(ServerID s, int timestamp)
 	{
 		this.vector.put(s, timestamp);
 	}
 	
+	/**
+	 * Removes the entry associated with a server from the vector entirely. This
+	 * should be called upon retirement.
+	 * @param s
+	 */
 	public void remove(ServerID s)
 	{
 		this.vector.remove(s);

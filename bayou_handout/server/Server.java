@@ -1,5 +1,9 @@
 package server;
 
+import java.util.Iterator;
+
+import message.Write;
+
 /**
  * Abstraction for a Bayou server.
  * @author tsm
@@ -11,6 +15,7 @@ public class Server implements Runnable {
 	private ServerID ID;
 	
 	// Write Log.
+	private WriteLog DB;
 	
 	// Version Vector
 	private VersionVector V;
@@ -47,9 +52,28 @@ public class Server implements Runnable {
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
 		{
-			
+			for (Iterator<Write> it = this.DB.getCommittedWrites().iterator(); it.hasNext();)
+			{
+				Write w = it.next();
+				if (w.stamp() <= RV.getAcceptStamp(w.server()))
+				{
+					// R has the write, but does not know it is committed.
+				}
+				else
+				{
+					// Send Write. Note: This should commit.
+				}
+			}
 		}
 		
 		// Propagate tentative writes.
+		for (Iterator<Write> it = this.DB.getTentativeWrites().iterator(); it.hasNext();)
+		{
+			Write w = it.next();
+			if (RV.getAcceptStamp(w.server()) < w.stamp())
+			{
+				// Send Write to R
+			}
+		}
 	}
 }

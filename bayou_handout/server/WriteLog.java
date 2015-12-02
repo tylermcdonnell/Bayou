@@ -1,6 +1,7 @@
 package server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import message.Write;
 
@@ -11,13 +12,13 @@ import message.Write;
  */
 public class WriteLog {
 
-	public ArrayList<Write> getCommittedWrites()
+	public List<Write> getCommittedWrites()
 	{
 		// TODO
 		return new ArrayList<Write>();
 	}
 	
-	public ArrayList<Write> getTentativeWrites()
+	public List<Write> getTentativeWrites()
 	{
 		// TODO
 		return new ArrayList<Write>();
