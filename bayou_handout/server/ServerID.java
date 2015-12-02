@@ -3,7 +3,7 @@ package server;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerID implements Comparable {
+public class ServerID implements Comparable<ServerID> {
 	
 	private final String INITIAL_PRIMARY = "INITIAL";
 	
@@ -109,7 +109,7 @@ public class ServerID implements Comparable {
 	}
 	
 	@Override
-	public int compareTo(Object compareTo) 
+	public int compareTo(ServerID compareTo) 
 	{
 		if (compareTo instanceof ServerID)
 		{
