@@ -3,7 +3,7 @@ package server;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerID {
+public class ServerID implements Comparable {
 	
 	private final String INITIAL_PRIMARY = "INITIAL";
 	
@@ -107,4 +107,39 @@ public class ServerID {
 			return String.format("<%s, %d>", this.getParent().toString(), this.stamps.get(this.stamps.size() - 1));
 		}
 	}
+	
+	@Override
+	public int compareTo(Object compareTo) 
+	{
+		if (compareTo instanceof ServerID)
+		{
+			return this.toString().compareTo(compareTo.toString());
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o instanceof ServerID)
+		{
+			return this.toString().equals(o.toString());
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + (this.toString().hashCode());
+        return result;
+    }
 }

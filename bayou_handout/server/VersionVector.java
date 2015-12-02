@@ -1,6 +1,8 @@
 package server;
 
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Abstraction for the <ServerID, TimeStamp> vector used for Bayou exchanges.
@@ -35,6 +37,16 @@ public class VersionVector {
 		this.vector.put(s, 0);
 	}
 	
+	public void update(ServerID s, int timestamp)
+	{
+		this.vector.put(s, timestamp);
+	}
+	
+	public void remove(ServerID s)
+	{
+		this.vector.remove(s);
+	}
+	
 	/**
 	 * Returns the largest accept-stamp of any write known to this Version Vector
 	 * that was originally accepted from by server s.
@@ -59,5 +71,43 @@ public class VersionVector {
 		{
 			return Integer.MIN_VALUE;
 		}
+	}
+	
+	public static boolean test()
+	{
+		VersionVector v1 = new VersionVector();
+		
+		ServerID first = new ServerID();
+		ServerID second = new ServerID(first, 1);
+		ServerID third = new ServerID(first, 2);
+		ServerID fourth = new ServerID(third, 3);
+		
+		v1.update(first, 0);
+		v1.update(second, 1);;
+		v1.update(third, 2);
+		v1.update(fourth, 3);
+		
+		System.out.println(String.format("Retrieved: %d Expected: %d", v1.getAcceptStamp(first), 0));
+		System.out.println(String.format("Retrieved: %d Expected: %d", v1.getAcceptStamp(second), 1));
+		System.out.println(String.format("Retrieved: %d Expected: %d", v1.getAcceptStamp(third), 2));
+		System.out.println(String.format("Retrieved: %d Expected: %d", v1.getAcceptStamp(fourth), 3));
+		
+		v1.remove(fourth);
+		
+		System.out.println(String.format("Retrieved: %d Expected: %d", v1.getAcceptStamp(fourth), Integer.MIN_VALUE));
+		
+		v1.update(third, 4);
+		
+		System.out.println(String.format("Retrieved: %d Expected %d", v1.getAcceptStamp(fourth), Integer.MAX_VALUE));
+		
+		v1.update(second, 4);
+		
+		System.out.println(String.format("Retrieved: %d Expected %d", v1.getAcceptStamp(fourth), Integer.MAX_VALUE));
+		
+		v1.update(first, 1);
+		
+		System.out.println(String.format("Retrieved: %d Expected %d", v1.getAcceptStamp(fourth), Integer.MAX_VALUE));
+		
+		return false;
 	}
 }
