@@ -7,7 +7,7 @@ import server.ServerID;
  * @author tsm
  *
  */
-public class Write extends Message {
+public class Write extends Message implements Comparable<Write> {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -29,7 +29,7 @@ public class Write extends Message {
 	public Write(ServerID server, Integer stamp)
 	{
 		this.CSN 	= Integer.MAX_VALUE;
-		this.server = server;
+		this.server	= server;
 		this.stamp 	= stamp;
 	}
 	
@@ -56,5 +56,47 @@ public class Write extends Message {
 							 "CSN <%d> " + 
 							 "Stamp <%d>",
 							 this.server, this.CSN, this.stamp);
+	}
+	
+	@Override
+	/**
+	 * Total order of writes:
+	 * 		1. CSN is most important.
+	 * 		2. Accept stamp is used after CSN.
+	 * 		3. If CSN and accept order are the same, use server ID to break ties.
+	 * This total ordering ensures eventual consistency even for non-stable writes.
+	 */
+	public int compareTo(Write toCompare)
+	{
+		if (this.CSN != toCompare.CSN)
+		{
+			return (this.CSN < toCompare.CSN) ? -1 : 1;
+		}
+		else if (this.stamp != toCompare.stamp)
+		{
+			return (this.stamp < toCompare.stamp) ? -1 : 1;
+		}
+		else
+		{
+			return this.server.compareTo(toCompare.server);
+		}
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (!(o instanceof Write))
+		{
+			return false;
+		}
+		Write w = (Write)o;
+		if (this.compareTo(w) == 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
