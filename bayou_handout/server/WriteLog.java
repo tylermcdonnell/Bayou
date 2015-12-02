@@ -103,7 +103,7 @@ public class WriteLog {
 	
 	/**
 	 * @return		
-	 * 		A soft copy of ALL writes (committed + tentative) in
+	 * 		A soft copy of ordered writes (committed + tentative) in
 	 * 		defined total order. (See class notes).
 	 */
 	public List<Write> getWrites()
