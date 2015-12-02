@@ -1,8 +1,6 @@
 package server;
 
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Abstraction for the <ServerID, TimeStamp> vector used for Bayou exchanges.
