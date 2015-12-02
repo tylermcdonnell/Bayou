@@ -1,6 +1,7 @@
 package server;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import message.Write;
@@ -12,13 +13,11 @@ import message.Write;
  */
 public class WriteLog {
 	
-	private List<Write> committed;
-	private List<Write> tentative;
+	private List<Write> writes;
 	
 	public WriteLog()
 	{
-		this.committed = new ArrayList<Write>();
-		this.tentative = new ArrayList<Write>();
+		this.writes = new ArrayList<Write>();
 	}
 	
 	/**
@@ -26,51 +25,80 @@ public class WriteLog {
 	 * If the specified write is already committed, does nothing. If
 	 * there is no write in the log with the specified ServerID and
 	 * accept stamp, does nothing. However, this should never happen.
+	 * 
+	 * Invariant: writes are sorted by total ordering. (see compareTo)
+	 * 
 	 * @param server		
 	 * 			ID of server which first accepted write.
 	 * @param stamp			
 	 * 			Accept stamp given by server which first accepted.
+	 * @param CSN
+	 * 			Commit sequence number for this commit.
 	 */
-	public void commit(ServerID server, Integer stamp)
+	public void commit(ServerID server, Integer stamp, Integer CSN)
 	{
-		// First, check to make sure that it isn't already in 
-		// the committed writes. It might be, if we are the
-		// subject of more than one concurrent AE exchange.
-		
-		// Try to move from the list of tentative writes to
-		// committed writes.
-		
-		// If for some reason we don't know about it, there's
-		// been an error.
+		for (Write w : this.writes)
+		{
+			if (w.server().equals(server) && w.stamp().equals(stamp))
+			{
+				w.setCSN(CSN);
+			}
+		}
+		Collections.sort(this.writes);
 	}
 	
 	/**
 	 * Adds a new write to the log. If the write already exists
 	 * as defined by its ServerID and accept stamp, does nothing.
+	 * 
+	 * Invariant: writes are sorted by total ordering. (see compareTo)
+	 * 
 	 * @param w
 	 * 			Write to add to log.
 	 */
 	public void add(Write w)
 	{
-		
+		if (!this.writes.contains(w))
+		{
+			this.writes.add(w);
+		}
+		Collections.sort(this.writes);
 	}
 	
 	/**
 	 * @return		
-	 * 		A soft copy of committed writes in this log.
+	 * 		A soft copy of ordered committed writes in this log.
 	 */
 	public List<Write> getCommittedWrites()
 	{
-		return new ArrayList<Write>(this.committed);
+		List<Write> committed = new ArrayList<Write>();
+		for(Write w : this.writes)
+		{
+			if (w.CSN() != Integer.MAX_VALUE)
+			{
+				committed.add(w);
+			}
+		}
+		Collections.sort(committed);
+		return committed;
 	}
 	
 	/**
 	 * @return		
-	 * 		A soft copy of tentative writes in thei log.
+	 * 		A soft copy of ordered tentative writes in the log.
 	 */
 	public List<Write> getTentativeWrites()
 	{
-		return new ArrayList<Write>(this.tentative);
+		List<Write> tentative = new ArrayList<Write>();
+		for(Write w : this.writes)
+		{
+			if (w.CSN() == Integer.MAX_VALUE)
+			{
+				tentative.add(w);
+			}
+		}
+		Collections.sort(tentative);
+		return tentative;
 	}
 	
 	/**
@@ -80,9 +108,6 @@ public class WriteLog {
 	 */
 	public List<Write> getWrites()
 	{
-		List<Write> all = new ArrayList<Write>();
-		all.addAll(this.committed);
-		all.addAll(this.tentative);
-		return all;
+		return new ArrayList<Write>(this.writes);
 	}
 }

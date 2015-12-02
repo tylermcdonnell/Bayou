@@ -38,6 +38,11 @@ public class Write extends Message implements Comparable<Write> {
 		return this.CSN;
 	}
 	
+	public void setCSN(Integer CSN)
+	{
+		this.CSN = CSN;
+	}
+	
 	public ServerID server()
 	{
 		return this.server;
