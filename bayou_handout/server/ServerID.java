@@ -41,6 +41,14 @@ public class ServerID {
 		this.stamps.add(acceptStamp);
 	}
 	
+	/** 
+	 * Servers can be uniquely identified by their list of accept stamps. Note that all
+	 * servers in a system must necessarily arise from the initial primary. This constructor
+	 * is provided as convenience, since we can not rely on references to parents due to
+	 * serialization.
+	 * 
+	 * @param stamps			The list of stamps which uniquely identifies a ServerID.
+	 */
 	private ServerID(List<Integer> stamps)
 	{
 		this.stamps = stamps;
@@ -49,11 +57,42 @@ public class ServerID {
 	/**
 	 * Returns the ServerID of the parent. Note that this is a reference to a fresh copy
 	 * and not the original since those might otherwise get corrupted by serialization.
-	 * @return
+	 * 
+	 * @return					Returns the ServerID of the parent of this ServerID.
 	 */
 	public ServerID getParent()
 	{
 		return new ServerID(this.stamps.subList(0, this.stamps.size() - 1));
+	}
+
+	/**
+	 * Returns True if this server is the initial primary server for the Bayou system.
+	 * This should be simple to observe, since all servers other than the initial 
+	 * primary are recursively defined. Thus, the initial primary is the only server
+	 * in the system with a single-level ID.
+	 * 
+	 * @return					True if this Server is initial primary server. Else, false.
+	 */
+	public boolean isInitialPrimary()
+	{
+		if (this.stamps.size() == 1) // Initial Primary has actually one stamp - "0"
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	/**
+	 * Returns the accept stamp associated with this ServerID. Note that the ServerID
+	 * is by definition the concatenation of this stamp and the ServerID of its parent.
+	 * @return 					This server's accept stamp with parent.
+	 */
+	public Integer getStamp()
+	{
+		return this.stamps.get(this.stamps.size() - 1);
 	}
 	
 	@Override
@@ -66,25 +105,6 @@ public class ServerID {
 		else
 		{
 			return String.format("<%s, %d>", this.getParent().toString(), this.stamps.get(this.stamps.size() - 1));
-		}
-	}
-
-	/**
-	 * Returns True if this server is the initial primary server for the Bayou system.
-	 * This should be simple to observe, since all servers other than the initial 
-	 * primary are recursively defined. Thus, the initial primary is the only server
-	 * in the system with a single-level ID.
-	 * @return
-	 */
-	public boolean isInitialPrimary()
-	{
-		if (this.stamps.size() == 1) // Initial Primary has actually one stamp - "0"
-		{
-			return true;
-		}
-		else
-		{
-			return false;
 		}
 	}
 }

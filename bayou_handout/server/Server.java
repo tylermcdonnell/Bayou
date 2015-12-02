@@ -12,6 +12,11 @@ public class Server implements Runnable {
 	
 	// Write Log.
 	
+	// Version Vector
+	private VersionVector V;
+	
+	// Commit Sequence Number
+	private int CSN;
 	
 	/**
 	 * Constructor.
@@ -27,7 +32,8 @@ public class Server implements Runnable {
 	 */
 	public Server(boolean isInitialPrimary)
 	{
-		
+		this.V 		= new VersionVector();
+		this.CSN 	= 0;
 	}
 	
 	@Override
@@ -36,8 +42,14 @@ public class Server implements Runnable {
 		// Primary server logic.
 	}
 	
-	public void antiEntropy(VersionVector RV, int CSN)
+	public void antiEntropy(VersionVector RV, int RCSN)
 	{
+		// Propagate committed writes.
+		if (RCSN < this.CSN)
+		{
+			
+		}
 		
+		// Propagate tentative writes.
 	}
 }
