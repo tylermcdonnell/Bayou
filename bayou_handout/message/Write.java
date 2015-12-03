@@ -12,13 +12,13 @@ public class Write extends Message implements Comparable<Write> {
 	private static final long serialVersionUID = 1L;
 	
 	// Commit Sequence Number once this Write has been committed.
-	private int CSN;
+	protected int CSN;
 	
 	// The ServerID which first accepted this write.
-	private ServerID server; 
+	protected ServerID server; 
 	
 	// The accept stamp of the server which first accepted this write.
-	private int stamp;
+	protected int stamp;
 	
 	/**
 	 * Constructor. Initializes CSN to Infinity.
