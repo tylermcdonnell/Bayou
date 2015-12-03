@@ -7,14 +7,22 @@ package client;
  */
 public class Client implements Runnable {
 	
-	public Client()
+	// The server I talk to for requests.
+	private int myServerId;
+	
+	public Client(int myServerId)
 	{
-		
+		this.myServerId = myServerId;
 	}
 	
 	@Override
 	public void run()
 	{
 		
+	}
+	
+	public int getMySeverId()
+	{
+		return this.myServerId;
 	}
 }
