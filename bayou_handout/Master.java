@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import server.WriteLog;
 import socketFramework.Config;
 import socketFramework.NetController;
 
@@ -25,6 +26,7 @@ public class Master
 
 	public static void main(String [] args)
 	{
+		WriteLog.test();
 		Scanner scan = new Scanner(System.in);
     
 		while (scan.hasNextLine())

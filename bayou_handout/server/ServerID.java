@@ -113,7 +113,7 @@ public class ServerID implements Comparable<ServerID> {
 	{
 		if (compareTo instanceof ServerID)
 		{
-			return this.toString().compareTo(compareTo.toString());
+			return this.toString().compareTo(compareTo.toString());	
 		}
 		else
 		{

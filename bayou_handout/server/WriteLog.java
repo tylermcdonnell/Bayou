@@ -35,11 +35,11 @@ public class WriteLog {
 	 * @param CSN
 	 * 			Commit sequence number for this commit.
 	 */
-	public void commit(ServerID server, Integer stamp, Integer CSN)
+	public void commit(ServerID server, int stamp, int CSN)
 	{
 		for (Write w : this.writes)
 		{
-			if (w.server().equals(server) && w.stamp().equals(stamp))
+			if (w.server().equals(server) && w.stamp() == stamp)
 			{
 				w.setCSN(CSN);
 			}
@@ -109,5 +109,47 @@ public class WriteLog {
 	public List<Write> getWrites()
 	{
 		return new ArrayList<Write>(this.writes);
+	}
+	
+	public static boolean test()
+	{
+		WriteLog log = new WriteLog();
+		
+		ServerID primary = new ServerID();
+		ServerID secondary = new ServerID(primary, 1);
+		
+		Write w1 = new Write(primary, 1);
+		w1.setCSN(1);
+		Write w2 = new Write(primary, 2);
+		w2.setCSN(2);
+		Write w3 = new Write(primary, 3);
+		Write w4 = new Write(secondary, 3);
+		
+		log.add(w4);
+		log.add(w3);
+		log.add(w2);
+		log.add(w1);
+
+		System.out.println(String.format("Expected: \n<%s>\n<%s>", w1.toString(), w2.toString()));
+		System.out.println("Actual: ");
+		for (Write w : log.getCommittedWrites())
+		{
+			System.out.println(String.format("<%s>", w.toString()));
+		}
+		
+		System.out.println(String.format("Expected: \n<%s>\n<%s>", w4.toString(), w3.toString()));
+		System.out.println("Actual: ");
+		for (Write w : log.getTentativeWrites())
+		{
+			System.out.println(String.format("<%s>", w.toString()));
+		}
+		
+		System.out.println(String.format("Expected: \n<%s>\n<%s>\n<%s>\n<%s>", w1.toString(), w2.toString(), w4.toString(), w3.toString()));
+		System.out.println("Actual: ");
+		for (Write w : log.getWrites())
+		{
+			System.out.println(String.format("<%s>", w.toString()));
+		}
+		return true;
 	}
 }

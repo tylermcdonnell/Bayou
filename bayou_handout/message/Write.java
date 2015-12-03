@@ -12,13 +12,13 @@ public class Write extends Message implements Comparable<Write> {
 	private static final long serialVersionUID = 1L;
 	
 	// Commit Sequence Number once this Write has been committed.
-	private Integer CSN;
+	private int CSN;
 	
 	// The ServerID which first accepted this write.
 	private ServerID server; 
 	
 	// The accept stamp of the server which first accepted this write.
-	private Integer stamp;
+	private int stamp;
 	
 	/**
 	 * Constructor. Initializes CSN to Infinity.
@@ -26,19 +26,19 @@ public class Write extends Message implements Comparable<Write> {
 	 * @param server		Server which first accepted this write.
 	 * @param stamp			Stamp served which accepted this write gave to it.
 	 */
-	public Write(ServerID server, Integer stamp)
+	public Write(ServerID server, int stamp)
 	{
 		this.CSN 	= Integer.MAX_VALUE;
 		this.server	= server;
 		this.stamp 	= stamp;
 	}
 	
-	public Integer CSN()
+	public int CSN()
 	{
 		return this.CSN;
 	}
 	
-	public void setCSN(Integer CSN)
+	public void setCSN(int CSN)
 	{
 		this.CSN = CSN;
 	}
@@ -48,7 +48,7 @@ public class Write extends Message implements Comparable<Write> {
 		return this.server;
 	}
 	
-	public Integer stamp()
+	public int stamp()
 	{
 		return this.stamp;
 	}
