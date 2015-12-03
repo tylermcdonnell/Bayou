@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import message.Get;
 import message.Write;
 
 /**
@@ -118,12 +119,12 @@ public class WriteLog {
 		ServerID primary = new ServerID();
 		ServerID secondary = new ServerID(primary, 1);
 		
-		Write w1 = new Write(primary, 1);
+		Write w1 = new Write(primary, 1, new Get(""));
 		w1.setCSN(1);
-		Write w2 = new Write(primary, 2);
+		Write w2 = new Write(primary, 2, new Get(""));
 		w2.setCSN(2);
-		Write w3 = new Write(primary, 3);
-		Write w4 = new Write(secondary, 3);
+		Write w3 = new Write(primary, 3, new Get(""));
+		Write w4 = new Write(secondary, 3, new Get(""));
 		
 		log.add(w4);
 		log.add(w3);

@@ -20,17 +20,21 @@ public class Write extends Message implements Comparable<Write> {
 	// The accept stamp of the server which first accepted this write.
 	protected int stamp;
 	
+	// Actual Write information
+	private WriteRequest action;
+	
 	/**
 	 * Constructor. Initializes CSN to Infinity.
 	 * 
 	 * @param server		Server which first accepted this write.
 	 * @param stamp			Stamp served which accepted this write gave to it.
 	 */
-	public Write(ServerID server, int stamp)
+	public Write(ServerID server, int stamp, WriteRequest action)
 	{
 		this.CSN 	= Integer.MAX_VALUE;
 		this.server	= server;
 		this.stamp 	= stamp;
+		this.action = action;
 	}
 	
 	public int CSN()
@@ -53,14 +57,20 @@ public class Write extends Message implements Comparable<Write> {
 		return this.stamp;
 	}
 	
+	public WriteRequest action()
+	{
+		return this.action;
+	}
+	
 	@Override
 	public String toString() 
 	{
 		return String.format("Write : " +
 							 "Server <%s> " + 
 							 "CSN <%d> " + 
-							 "Stamp <%d>",
-							 this.server, this.CSN, this.stamp);
+							 "Stamp <%d>" + 
+							 "Action <%s>",
+							 this.server, this.CSN, this.stamp, this.action);
 	}
 	
 	@Override
