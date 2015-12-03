@@ -25,6 +25,15 @@ public class Master
 	// NOTE: assumes that servers and clients are given the next possible ID
 	// available, and the very first NetController created has ID = 0.
 	public static ArrayList<NetController> netControllers = new ArrayList<NetController>();
+	
+	// A list of the NetController IDs for servers that are alive.
+	public static ArrayList<Integer> aliveServerNetControllerIDs = new ArrayList<Integer>();
+	
+	// TODO: add a list of clients?
+	
+	// TODO: add a list of servers?
+	
+	// TODO: make a queue between the master and each client?
 
 	public static void main(String [] args)
 	{
@@ -42,12 +51,11 @@ public class Master
         		
 					serverId = Integer.parseInt(inputLine[1]);
             
-	            /*
-	             * Start up a new server with this id and connect it to all servers
-	             */
+					/*
+					 * Start up a new server with this id and connect it to all servers
+					 */
 	            
-	            // Create a NetController for this server.
-	            createNetController(serverId, MAX_NUM_NODES_IN_SYSTEM);
+					joinServer(serverId);
 	            
 	            	break;
 	            
@@ -59,6 +67,13 @@ public class Master
 		             * the server can tell another server of its retirement
 		             */
 		            
+		            // TODO: remove this server's ID from the list of alive server IDs,
+		            // but ONLY ONCE the retired server has talked to one other server
+		            // (I think that's supposed to be blocking anyways, else the server
+		            // which is retiring can simply call a Master (or NetController) method 
+		            // to remove it from the list.
+		            
+		            // .... serverNetControllerIDs.remove(retiredServerId);
 		            
 		            break;
 		            
@@ -72,9 +87,7 @@ public class Master
 		             * the server
 		             */
 		            
-		            // Create a NetController for this client.
-		            createNetController(serverId, MAX_NUM_NODES_IN_SYSTEM);
-		            
+		            joinClient(clientId, serverId);
 		            
 		            break;
 		            
@@ -217,7 +230,22 @@ public class Master
 	        		// Should succeed.
 	        		nc_0.sendMsg(1, "HI");
 	        		nc_1.sendMsg(0, "HI");
-	            
+	        		
+	        		break;
+	        		
+	        	// MIKE: added for testing alive server list.
+	        	case "createServerTest":
+	        		
+	        		joinClient(0, 0);
+	        		joinClient(1, 0);
+	        		joinServer(2);
+	        		joinServer(3);
+	        		joinClient(4, 0);
+	        		joinServer(5);
+	        		
+	        		System.out.println("Should be (2, 3, 5): " + Master.aliveServerNetControllerIDs);
+	        		System.out.println("Should be (2, 3, 5): " + Master.netControllers.get(0).getAliveServers());
+	        		
 	        		break;
 	        		
 	        	// MIKE: added for API, this is the "clean up" command.
@@ -245,6 +273,36 @@ public class Master
 	} // End main.
   
 	
+	
+	private static void joinServer(int serverId)
+	{
+		// Create a NetController for this server.
+        createNetController(serverId, Master.MAX_NUM_NODES_IN_SYSTEM);
+        
+        // Add its index to the list of alive server IDs.
+        Master.aliveServerNetControllerIDs.add(serverId);
+        
+        // TODO:
+        // Create server.
+        
+        // TODO:
+        // Add this server to a list of Server objects?
+	}
+	
+	private static void joinClient(int clientId, int serverId)
+	{
+		// Create a NetController for this client.
+        createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
+        
+        // Pass in the server ID to this client, they can use that as
+        // the argument to send() when they talk to their server.
+        
+        // TODO:
+        // Create client.
+        
+        // TODO:
+        // Add this client to a list of Client objects?
+	}
 	
 	/**
 	 * Breaks the connection between the two NetControllers whose IDs correspond
@@ -342,7 +400,7 @@ public class Master
 		try {
 
 			Config config = new Config(fileName);
-			nc = new NetController(config, numProcesses, processNumber);
+			nc = new NetController(config, numProcesses, processNumber, Master.aliveServerNetControllerIDs);
 
 		} catch (Exception e) {
 			e.printStackTrace();

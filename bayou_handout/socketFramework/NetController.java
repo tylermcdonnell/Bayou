@@ -53,6 +53,11 @@ public class NetController {
 	private final OutgoingSock[] outSockets;
 	private final ListenServer listener;
 	
+	// MIKE: a reference to the alive servers list in the Master class.
+	// Since the Master class is in default package, you can't access its fields,
+	// thus I pass in the reference to the list.
+	ArrayList<Integer> aliveServersFromMaster;
+	
 	// MIKE: added for heart beats, if necessary.
 	//private long lastTimeMessageSent;
 	
@@ -61,8 +66,11 @@ public class NetController {
 	//       sends have a client or server ID specified.
 	//private final int numClients;
 	
-	public NetController(Config config, int numProcesses, int ID)
+	public NetController(Config config, int numProcesses, int ID, ArrayList<Integer> aliveServersReference)
 	{
+		// MIKE: added.
+		this.aliveServersFromMaster = aliveServersReference;
+		
 		// MIKE: added.
 		this.MAX_NUM_NODES_IN_SYSTEM = numProcesses;
 		
@@ -102,6 +110,11 @@ public class NetController {
 	}
 	*/
 	
+	
+	public ArrayList<Integer> getAliveServers()
+	{
+		return this.aliveServersFromMaster;
+	}
 	
 	/**
 	 * Breaks the connection from this net controller to the net controller
