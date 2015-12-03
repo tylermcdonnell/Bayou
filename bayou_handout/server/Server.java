@@ -2,6 +2,7 @@ package server;
 
 import java.util.Iterator;
 
+import message.Commit;
 import message.Write;
 
 /**
@@ -58,10 +59,12 @@ public class Server implements Runnable {
 				if (w.stamp() <= RV.getAcceptStamp(w.server()))
 				{
 					// R has the write, but does not know it is committed.
+					Commit c = new Commit(w.server(), w.stamp(), w.CSN());
+					// TODO: Send Commit to R.
 				}
 				else
 				{
-					// Send Write. Note: This should commit.
+					// TODO: Send Write to R. Note: This should automatically commit.
 				}
 			}
 		}
@@ -72,7 +75,7 @@ public class Server implements Runnable {
 			Write w = it.next();
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
-				// Send Write to R
+				// TODO: Send Write to R
 			}
 		}
 	}
