@@ -53,9 +53,8 @@ public class Server implements Runnable {
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
 		{
-			for (Iterator<Write> it = this.DB.getCommittedWrites().iterator(); it.hasNext();)
+			for (Write w : this.DB.getCommittedWrites())
 			{
-				Write w = it.next();
 				if (w.stamp() <= RV.getAcceptStamp(w.server()))
 				{
 					// R has the write, but does not know it is committed.
@@ -70,9 +69,8 @@ public class Server implements Runnable {
 		}
 		
 		// Propagate tentative writes.
-		for (Iterator<Write> it = this.DB.getTentativeWrites().iterator(); it.hasNext();)
+		for (Write w : this.DB.getCommittedWrites())
 		{
-			Write w = it.next();
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
 				// TODO: Send Write to R
