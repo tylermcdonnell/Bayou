@@ -69,7 +69,7 @@ public class Server implements Runnable {
 		}
 		
 		// Propagate tentative writes.
-		for (Write w : this.DB.getCommittedWrites())
+		for (Write w : this.DB.getTentativeWrites())
 		{
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
