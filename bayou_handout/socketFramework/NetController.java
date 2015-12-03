@@ -18,12 +18,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.logging.Level;
 
 import message.Message;
@@ -197,6 +199,33 @@ public class NetController {
 		return Base64.getEncoder().encodeToString(out.toByteArray());
 	}
 	
+	/**
+	 * Sends a message to the specified process.
+	 * 
+	 * @param process
+	 * 		NetController port ID of the process the message
+	 * 		should be sent to. Note that this is not the 
+	 * 		fully qualified ServerID. Clients and servers
+	 * 		share the same ID space.
+	 * @param m
+	 * 		Message to be sent.
+	 * @return
+	 */
+	public boolean sendMessageToProcess(int process, Message m)
+	{
+		try 
+		{
+			Map.Entry<Integer, Message> toSend = new AbstractMap.SimpleEntry<Integer, Message>(this.ID, m);
+			return sendMsg(process, toString((Serializable)toSend));
+		}
+		catch (Exception exc)
+		{
+			System.out.println(exc.getMessage());
+			System.out.println("ERROR: IOException while sending message.");
+			return false;
+		}
+	}
+	
 	// MIKE: changed for Paxos.
 	// MIKE: not used for Bayou -- clients and servers have unique IDs and
 	//       sends have a client or server ID specified.
@@ -252,7 +281,7 @@ public class NetController {
 	 * Return a list of msgs received on established incoming sockets
 	 * @return list of messages sorted by socket, in FIFO order. *not sorted by time received*
 	 */
-	public synchronized List<String> getReceivedMsgs() {
+	private synchronized List<String> getReceivedMsgs() {
 		List<String> objs = new ArrayList<String>();
 		synchronized(inSockets) {
 			ListIterator<IncomingSock> iter  = inSockets.listIterator();
@@ -279,6 +308,34 @@ public class NetController {
 		Object o = in.readObject();
 		in.close();
 		return o;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Map.Entry<Integer, Message>> getReceivedMessages()
+	{
+		List<String> msgs = getReceivedMsgs();
+		List<Map.Entry<Integer, Message>> received = new ArrayList<Map.Entry<Integer, Message>>();
+		for (String s : msgs)
+		{
+			try
+			{
+				Object r = fromString(s);
+				if (r instanceof Map.Entry<?, ?>)
+				{
+					received.add((Map.Entry<Integer, Message>)r);
+				}
+			}
+			catch(IOException exc)
+			{
+				System.out.println("ERROR: I/O while receiving message.");
+				exc.printStackTrace();
+			}
+			catch(ClassNotFoundException exc)
+			{
+				System.out.println("ERROR: Class not found while receiving message.");
+			}
+		}
+		return received;
 	}
 	
 	public List<Message> getReceived() 
