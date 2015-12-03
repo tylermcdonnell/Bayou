@@ -1,7 +1,5 @@
 package server;
 
-import java.util.Iterator;
-
 import message.Commit;
 import message.Write;
 
