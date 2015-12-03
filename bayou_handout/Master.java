@@ -2,8 +2,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 
+import message.Get;
+import message.Message;
 import socketFramework.Config;
 import socketFramework.NetController;
 
@@ -26,7 +29,7 @@ public class Master
 	public static void main(String [] args)
 	{
 		Scanner scan = new Scanner(System.in);
-    
+
 		while (scan.hasNextLine())
 		{
 			String [] inputLine = scan.nextLine().split(" ");
@@ -349,6 +352,29 @@ public class Master
 		netControllers.add(nc);
 
 		return nc;
+	}
+	
+	public static void testNetControllers()
+	{
+		NetController nc1 = createNetController(1, Master.MAX_NUM_NODES_IN_SYSTEM);
+		NetController nc2 = createNetController(2, Master.MAX_NUM_NODES_IN_SYSTEM);
+		
+		nc1.sendMessageToProcess(2, new Get("Test"));
+		nc2.sendMessageToProcess(1, new Get("Test"));
+		
+		while (true)
+		{
+			for (Map.Entry<Integer, Message> e : nc1.getReceivedMessages())
+			{
+				System.out.println(String.format("Received messaged from <%d> <%s>", 
+											   	 e.getKey(), e.getValue().toString()));
+			}
+			for (Map.Entry<Integer, Message> e : nc2.getReceivedMessages())
+			{
+				System.out.println(String.format("Received messaged from <%d> <%s>", 
+					   	 e.getKey(), e.getValue().toString()));
+			}
+		}
 	}
   
 }
