@@ -62,7 +62,7 @@ public class VersionVector {
 	 * 
 	 * @param s				Server ID which we would like to know accept-stamp for.
 	 */
-	public Integer getAcceptStamp(ServerID s)
+	public int getAcceptStamp(ServerID s)
 	{
 		if (this.vector.containsKey(s))
 		{
