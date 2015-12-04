@@ -17,12 +17,6 @@ import socketFramework.NetController;
 
 public class Master
 {
-	
-	// A list of queues we can talk to clients with. The queue at index i is the
-	// queue that client i is continuously listening on. Note that this is based
-	// on the index that the client is given.
-	//public static ArrayList<LinkedList<WriteRequest>> clientQueues = new ArrayList<LinkedList<WriteRequest>>();
-	
 	// A list of the process objects underlying the client thread handles.
 	public static ArrayList<Client> clientProcesses = new ArrayList<Client>();
 	
@@ -291,23 +285,6 @@ public class Master
 		// Create a NetController for this client.
         createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
         
-        // A queue for give this client commands.
-     	//LinkedList<WriteRequest> clientQueue = new LinkedList<WriteRequest>();
-     	
-     	// If the element at index clientId is not created yet.
-     	//int highestIndex = Master.clientQueues.size() - 1;
-     	//if (highestIndex < clientId)
-     	//{
-     	//	int difference = clientId - highestIndex;
-     	//	
-     	//	for (int i = 0; i < (difference - 1); i++)
-     	//	{
-     	//		Master.clientQueues.add(null);
-     	//	}
-     	//}
-     	
-     	//Master.clientQueues.add(clientQueue);
-        
         // Pass in the server ID to this client, they can use that as
         // the argument to send() when they talk to their server.
         Client newClient = new Client(clientId, serverId);
@@ -329,8 +306,6 @@ public class Master
      	{
      		Master.clientProcesses.set(clientId, newClient);
      	}
-     	
-
      	
         // Create client thread.
         Thread newClientThread = new Thread(newClient);
