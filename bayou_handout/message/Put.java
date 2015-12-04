@@ -4,9 +4,9 @@ public class Put extends WriteRequest
 {
 	private static final long serialVersionUID = 1L;
 	
-	private String songName;
+	public String songName;
 	
-	private String url;
+	public String url;
 	
 	public Put(String songName, String url)
 	{
