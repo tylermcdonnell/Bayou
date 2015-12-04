@@ -310,7 +310,6 @@ public class NetController {
 				}
 			}
 		}
-		
 		return objs;
 	}
 	
@@ -346,6 +345,7 @@ public class NetController {
 			catch(ClassNotFoundException exc)
 			{
 				System.out.println("ERROR: Class not found while receiving message.");
+				exc.printStackTrace();
 			}
 		}
 		return received;

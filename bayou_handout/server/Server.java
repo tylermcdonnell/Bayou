@@ -3,6 +3,7 @@ package server;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import message.GetResponse;
 import message.Join;
@@ -62,6 +63,9 @@ public class Server implements Runnable {
 	// Random number generator.
 	private Random random;
 	
+	// Used for test-case simulation. Pauses all anti-entropy messages. 
+	private volatile AtomicBoolean paused;
+	
 	/**
 	 * Constructor.
 	 * 
@@ -88,6 +92,7 @@ public class Server implements Runnable {
 		this.network	= network;
 		this.nextAE		= Long.MAX_VALUE;
 		this.random 	= new Random();
+		this.paused		= new AtomicBoolean(false);
 		
 		if (isInitialPrimary)
 		{
@@ -101,108 +106,157 @@ public class Server implements Runnable {
 		}
 	}
 	
+	/**
+	 * Pauses this server. No anti-entropy exchanges will be initiated or 
+	 * responded to during this period. In fact, the server will send and
+	 * receive no messages while paused. Pause is not IMMEDIATE, any messages
+	 * received by the server in the current iteration of the loop may leak
+	 * through.
+	 */
+	public synchronized void pause()
+	{
+		synchronized (this.paused)
+		{
+			this.paused.set(true);
+		}
+	}
+	
+	public synchronized void start()
+	{
+		synchronized (this.paused)
+		{
+			this.paused.set(false);
+			this.paused.notify();
+		}
+	}
+	
 	@Override
 	public void run()
 	{
-		// Check if it's time to initiate a new anti-entropy exchange. For now,
-		// this does not use any type of state machine to guide anti-entropy 
-		// exchanges. In other words, one begins every 100 milliseconds, regardless
-		// of whether one is already in progress or failed. This can certainly be
-		// problematic if the period is so low that the messages flood the system.
-		if (System.currentTimeMillis() >= this.nextAE)
+		System.out.println("Started.");
+		while(true)
 		{
-			this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
-			
-			ArrayList<Integer> servers = this.network.getAliveServers();
-			int target = servers.get(random.nextInt(servers.size()));
-			this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
-		}
-		
-		for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
-		{
-			int s 		= e.getKey();
-			Message m 	= e.getValue();
-			
-			//******************************************************************
-			//* SERVER ID ASSIGNMENT - Do NOTHING until we are assigned an ID.
-			//******************************************************************
-			if (m instanceof JoinResponse)
+			// Pause functionality for test case simulation.
+			synchronized(this.paused)
 			{
-				this.ID = ((JoinResponse)m).ID;
+				try
+				{ 
+					while (this.paused.get() == true)
+					{
+						System.out.println("Yikes!");
+						this.paused.wait();
+					}
+				}
+				catch (InterruptedException e) 
+				{
+			        // No one should interrupt this thread...
+			    }
+			}
+			
+			/*
+			// Check if it's time to initiate a new anti-entropy exchange. For now,
+			// this does not use any type of state machine to guide anti-entropy 
+			// exchanges. In other words, one begins every 100 milliseconds, regardless
+			// of whether one is already in progress or failed. This can certainly be
+			// problematic if the period is so low that the messages flood the system.
+			if (System.currentTimeMillis() >= this.nextAE)
+			{
 				this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
-			}
-			if (this.ID == null)
-			{
-				continue;
-			}
-			
-			//******************************************************************
-			//* CLIENT REQUESTS
-			//******************************************************************
-			if (m instanceof WriteRequest)
-			{
-				// TODO: Check session guarantees.
 				
-				write((Put)m);
-				this.network.sendMessageToProcess(s, new WriteResponse(true));
+				ArrayList<Integer> servers = this.network.getAliveServers();
+				int target = servers.get(random.nextInt(servers.size()));
+				this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
 			}
+			*/
 			
-			if (m instanceof ReadRequest)
+			System.out.println("Yay");
+			for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
 			{
-				// TODO: Check session guarantees.
+				System.out.println("Received.");
+				int s 		= e.getKey();
+				Message m 	= e.getValue();
 				
-				if (m instanceof Get)
+				//******************************************************************
+				//* SERVER ID ASSIGNMENT - Do NOTHING until we are assigned an ID.
+				//******************************************************************
+				if (m instanceof JoinResponse)
 				{
-					this.network.sendMessageToProcess(s, get((Get)m));
+					this.ID = ((JoinResponse)m).ID;
+					this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
 				}
-			}
-			
-			//******************************************************************
-			//* ANTI-ENTROPY STATE EXCHANGE
-			//******************************************************************
-			// TODO: Anti-Entropy initiate message.
-			
-			if (m instanceof StartAntiEntropy)
-			{
-				StartAntiEntropy SAE = (StartAntiEntropy)m;
-				AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
-				this.network.sendMessageToProcess(s, r);
-			}
-			
-			if (m instanceof ElectPrimary)
-			{
-				this.isPrimary = true;
-				
-				// Stabilize all local writes by assigning CSNs.
-				for (Write w : this.DB.getTentativeWrites())
+				if (this.ID == null)
 				{
-					w.setCSN(this.assignCSN());
+					continue;
 				}
-			}
-			
-			if (m instanceof Put || m instanceof Delete)
-			{
-				this.DB.add((Write)m);
-			}
-			
-			if (m instanceof Join)
-			{
-				// Log Write
-				Write w = write((Join)m);
 				
-				// Assign new Server ID to joining process.
-				ServerID newServerID = new ServerID(this.ID, w.stamp());
-				JoinResponse r = new JoinResponse(newServerID);
-				this.network.sendMessageToProcess(s, r);
-			}
-			
-			if (m instanceof Retire)
-			{
-				// Log Write
-				write((Retire)m);
+				//******************************************************************
+				//* CLIENT REQUESTS
+				//******************************************************************
+				if (m instanceof WriteRequest)
+				{
+					// TODO: Check session guarantees.
+					
+					write((Put)m);
+					this.network.sendMessageToProcess(s, new WriteResponse(true));
+				}
 				
-				// Remove from version vector
-				this.V.remove(((Retire)m).ID);
+				if (m instanceof ReadRequest)
+				{
+					// TODO: Check session guarantees.
+					
+					if (m instanceof Get)
+					{
+						this.network.sendMessageToProcess(s, get((Get)m));
+					}
+				}
+				
+				//******************************************************************
+				//* ANTI-ENTROPY STATE EXCHANGE
+				//******************************************************************
+				// TODO: Anti-Entropy initiate message.
+				
+				if (m instanceof StartAntiEntropy)
+				{
+					StartAntiEntropy SAE = (StartAntiEntropy)m;
+					AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
+					this.network.sendMessageToProcess(s, r);
+				}
+				
+				if (m instanceof ElectPrimary)
+				{
+					this.isPrimary = true;
+					
+					// Stabilize all local writes by assigning CSNs.
+					for (Write w : this.DB.getTentativeWrites())
+					{
+						w.setCSN(this.assignCSN());
+					}
+				}
+				
+				if (m instanceof Put || m instanceof Delete)
+				{
+					this.DB.add((Write)m);
+				}
+				
+				if (m instanceof Join)
+				{
+					// Log Write
+					Write w = write((Join)m);
+					
+					// Assign new Server ID to joining process.
+					ServerID newServerID = new ServerID(this.ID, w.stamp());
+					JoinResponse r = new JoinResponse(newServerID);
+					this.network.sendMessageToProcess(s, r);
+				}
+				
+				if (m instanceof Retire)
+				{
+					// Log Write
+					write((Retire)m);
+					
+					// Remove from version vector
+					this.V.remove(((Retire)m).ID);
+				}
 			}
 		}
 	}	

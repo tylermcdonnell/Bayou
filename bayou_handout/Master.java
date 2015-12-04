@@ -12,6 +12,7 @@ import message.Get;
 import message.Message;
 import message.Put;
 import message.WriteRequest;
+import server.Server;
 import socketFramework.Config;
 import socketFramework.NetController;
 
@@ -45,7 +46,7 @@ public class Master
 	public static void main(String [] args)
 	{
 		Scanner scan = new Scanner(System.in);
-
+		
 		while (scan.hasNextLine())
 		{
 			String[] inputLine = scan.nextLine().split(" ");
