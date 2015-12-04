@@ -13,6 +13,7 @@ import message.Get;
 import message.Message;
 import message.Put;
 import message.ReadRequest;
+import message.Retire;
 import message.StartAntiEntropy;
 import message.Write;
 import message.WriteRequest;
@@ -114,8 +115,7 @@ public class Server implements Runnable {
 			{
 				// TODO: Check session guarantees.
 				
-				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Put)m);
-				this.DB.add(w);
+				write((Put)m);
 				this.network.sendMessageToProcess(s, new WriteResponse(true));
 			}
 			
@@ -125,9 +125,7 @@ public class Server implements Runnable {
 				
 				if (m instanceof Get)
 				{
-					Get g = (Get)m;
-					GetResponse r = new GetResponse(g.songName, this.playlist.get(g.songName));
-					this.network.sendMessageToProcess(s, r);
+					this.network.sendMessageToProcess(s, get((Get)m));
 				}
 			}
 			
@@ -137,10 +135,19 @@ public class Server implements Runnable {
 			
 			if (m instanceof Join)
 			{
-				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Join)m);
+				// Log Write
+				Write w = write((Join)m);
+				
+				// Assign new Server ID to joining process.
 				ServerID newServerID = new ServerID(this.ID, w.stamp());
 				JoinResponse r = new JoinResponse(newServerID);
 				this.network.sendMessageToProcess(s, r);
+			}
+			
+			if (m instanceof Retire)
+			{
+				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Retire)m);
+				
 			}
 			
 			//******************************************************************
@@ -175,6 +182,34 @@ public class Server implements Runnable {
 				// TODO: Server retirement.
 			}
 		}
+	}
+	
+	
+	/**
+	 * Assigns a CSN and accept-stamp for a write request and logs it.
+	 * 
+	 * @param wr	
+	 * 		The write request.
+	 * @return
+	 * 		The resultant CSN-assigned, stamped, logged Write.
+	 */
+	private Write write(WriteRequest wr)
+	{
+		Write w = new Write(this.ID, this.assignCSN(), this.stamp(), wr);
+		this.DB.add(w);
+		return w;
+	}
+	
+	/**
+	 * Processes a get request.
+	 * @param g
+	 * 		The Get request
+	 * @return
+	 * 		Response ready to be returned to sender.
+	 */
+	private GetResponse get(Get g)
+	{
+		return new GetResponse(g.songName, this.playlist.get(g.songName));
 	}
 	
 	/**
