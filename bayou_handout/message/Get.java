@@ -1,6 +1,6 @@
 package message;
 
-public class Get extends WriteRequest 
+public class Get extends ReadRequest 
 {
 	private static final long serialVersionUID = 1L;
 	

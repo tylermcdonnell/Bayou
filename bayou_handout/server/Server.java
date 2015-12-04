@@ -1,7 +1,15 @@
 package server;
 
+import java.util.Map;
+
 import message.Commit;
+import message.Delete;
+import message.Get;
+import message.Message;
+import message.Put;
+import message.ReadRequest;
 import message.Write;
+import message.WriteRequest;
 import socketFramework.NetController;
 
 /**
@@ -62,7 +70,52 @@ public class Server implements Runnable {
 	@Override
 	public void run()
 	{
-		// Primary server logic.
+		for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
+		{
+			int s 		= e.getKey();
+			Message m 	= e.getValue();
+			
+			//******************************************************************
+			//* CLIENT REQUESTS
+			//******************************************************************
+			if (m instanceof WriteRequest)
+			{
+				// TODO: Check session guarantees.
+				
+				// TODO: Assign accept stamp and package in Write.
+			}
+			
+			if (m instanceof ReadRequest)
+			{
+				// TODO: Check session guarantees.
+			}
+			
+			//******************************************************************
+			//* ANTI-ENTROPY STATE EXCHANGE
+			//******************************************************************
+			// TODO: Anti-Entropy initiate message.
+			
+			// TODO: Primary hand-off.
+			
+			if (m instanceof Write)
+			{
+				WriteRequest action = ((Write) m).action();
+				
+				if (action instanceof Put)
+				{
+					
+				}
+				
+				if (action instanceof Delete)
+				{
+					
+				}
+				
+				// TODO: Server join.
+				
+				// TODO: Server retirement.
+			}
+		}
 	}
 	
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)

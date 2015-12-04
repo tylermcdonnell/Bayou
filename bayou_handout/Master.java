@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 
+import message.Delete;
 import message.Get;
 import message.Message;
 import socketFramework.Config;
@@ -417,8 +418,8 @@ public class Master
 		NetController nc1 = createNetController(1, Master.MAX_NUM_NODES_IN_SYSTEM);
 		NetController nc2 = createNetController(2, Master.MAX_NUM_NODES_IN_SYSTEM);
 		
-		nc1.sendMessageToProcess(2, new Get("Test"));
-		nc2.sendMessageToProcess(1, new Get("Test"));
+		nc1.sendMessageToProcess(2, new Delete("Test"));
+		nc2.sendMessageToProcess(1, new Delete("Test"));
 		
 		while (true)
 		{
