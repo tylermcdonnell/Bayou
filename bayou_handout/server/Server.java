@@ -144,7 +144,6 @@ public class Server implements Runnable {
 				{ 
 					while (this.paused.get() == true)
 					{
-						System.out.println("Yikes!");
 						this.paused.wait();
 					}
 				}
@@ -177,7 +176,9 @@ public class Server implements Runnable {
 				}
 			}
 			
-			System.out.println("Yay");
+			//******************************************************************
+			//* PROCESS NETWORK MESSAGES
+			//******************************************************************
 			for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
 			{
 				System.out.println("Received.");
