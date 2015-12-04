@@ -154,7 +154,6 @@ public class Server implements Runnable {
 			    }
 			}
 			
-			/*
 			// Check if it's time to initiate a new anti-entropy exchange. For now,
 			// this does not use any type of state machine to guide anti-entropy 
 			// exchanges. In other words, one begins every 100 milliseconds, regardless
@@ -164,11 +163,19 @@ public class Server implements Runnable {
 			{
 				this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
 				
+				// Choose target for anti-entropy exchange and initiate.
 				ArrayList<Integer> servers = this.network.getAliveServers();
-				int target = servers.get(random.nextInt(servers.size()));
-				this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
+				if (servers.size() > 1)
+				{
+					int target;
+					do
+					{
+						target = servers.get(random.nextInt(servers.size()));
+					}
+					while (target != this.network.getID());
+					this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
+				}
 			}
-			*/
 			
 			System.out.println("Yay");
 			for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())

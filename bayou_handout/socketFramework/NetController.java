@@ -100,6 +100,11 @@ public class NetController {
 		//this.lastTimeMessageSent = Long.MIN_VALUE;
 	}
 	
+	public int getID()
+	{
+		return this.ID;
+	}
+	
 	// MIKE: not used for Bayou -- clients and servers have unique IDs and
 	//       sends have a client or server ID specified.
 	
