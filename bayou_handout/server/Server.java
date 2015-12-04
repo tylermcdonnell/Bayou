@@ -2,6 +2,7 @@ package server;
 
 import message.Commit;
 import message.Write;
+import socketFramework.NetController;
 
 /**
  * Abstraction for a Bayou server.
@@ -16,10 +17,16 @@ public class Server implements Runnable {
 	// Write Log.
 	private WriteLog DB;
 	
-	// Version Vector
+	// Music Playlist.
+	private Playlist playlist;
+	
+	// Net Controller used to communicate with other processes.
+	private NetController network;
+	
+	// Version Vector.
 	private VersionVector V;
 	
-	// Commit Sequence Number
+	// Highest Commit Sequence Number this server knows about.
 	private int CSN;
 	
 	/**
@@ -34,10 +41,22 @@ public class Server implements Runnable {
 	 * 							allow new server to immediately communicate
 	 * 							with all servers in the system. How to?
 	 */
-	public Server(boolean isInitialPrimary)
+	public Server(boolean isInitialPrimary, NetController network)
 	{
-		this.V 		= new VersionVector();
-		this.CSN 	= 0;
+		this.V 			= new VersionVector();
+		this.CSN 		= 0;
+		this.DB 		= new WriteLog();
+		this.playlist 	= new Playlist(this.DB);
+		this.network	= network;
+		
+		if (isInitialPrimary)
+		{
+			this.ID = new ServerID();
+		}
+		else 
+		{
+			// TODO: Initiate join process
+		}
 	}
 	
 	@Override
@@ -46,7 +65,7 @@ public class Server implements Runnable {
 		// Primary server logic.
 	}
 	
-	public void antiEntropy(VersionVector RV, int RCSN)
+	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
 	{
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
@@ -57,11 +76,12 @@ public class Server implements Runnable {
 				{
 					// R has the write, but does not know it is committed.
 					Commit c = new Commit(w.server(), w.stamp(), w.CSN());
-					// TODO: Send Commit to R.
+					this.network.sendMessageToProcess(serverId, c);
 				}
 				else
 				{
-					// TODO: Send Write to R. Note: This should automatically commit.
+					// R does not have the write. Will commit automatically.
+					this.network.sendMessageToProcess(serverId, w);
 				}
 			}
 		}
@@ -71,7 +91,7 @@ public class Server implements Runnable {
 		{
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
-				// TODO: Send Write to R
+				this.network.sendMessageToProcess(serverId, w);
 			}
 		}
 	}
