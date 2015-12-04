@@ -2,17 +2,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 
+import client.Client;
 import message.Delete;
-import message.Get;
 import message.Message;
+import message.Put;
+import message.WriteRequest;
 import socketFramework.Config;
 import socketFramework.NetController;
 
 public class Master
 {
+	// A list of the process objects underlying the client thread handles.
+	public static ArrayList<Client> clientProcesses = new ArrayList<Client>();
 	
 	// The maximum number of nodes this system can handle.
 	// Note: this is how many ports the system will use. See NetController
@@ -42,7 +47,7 @@ public class Master
 
 		while (scan.hasNextLine())
 		{
-			String [] inputLine = scan.nextLine().split(" ");
+			String[] inputLine = scan.nextLine().split(" ");
 			int clientId, serverId, id1, id2;
 			String songName, URL;
       
@@ -55,9 +60,7 @@ public class Master
 					/*
 					 * Start up a new server with this id and connect it to all servers
 					 */
-	            
 					joinServer(serverId);
-	            
 	            	break;
 	            
 		        case "retireServer":
@@ -75,7 +78,6 @@ public class Master
 		            // to remove it from the list.
 		            
 		            // .... serverNetControllerIDs.remove(retiredServerId);
-		            
 		            break;
 		            
 		        case "joinClient":
@@ -87,9 +89,7 @@ public class Master
 		             * Start a new client with the id specified and connect it to 
 		             * the server
 		             */
-		            
 		            joinClient(clientId, serverId);
-		            
 		            break;
 		            
 		        case "breakConnection":
@@ -102,7 +102,6 @@ public class Master
 		             * two servers
 		             */
 		        	breakConnection(id1, id2);
-		        	
 		            break;
 	            
 		        case "restoreConnection":
@@ -115,7 +114,6 @@ public class Master
 		        	 * two servers
 		        	 */
 		        	restoreConnection(id1, id2);
-	    
 		        	break;
             
 		        case "pause":
@@ -148,7 +146,6 @@ public class Master
 		        	break;
             
 		        case "printLog":
-		        	
 		            serverId = Integer.parseInt(inputLine[1]);
 		            /*
 		             * Print out a server's operation log in the format specified in the
@@ -159,19 +156,28 @@ public class Master
 		            break;
             
 		        case "put":
-		        	
 		            clientId = Integer.parseInt(inputLine[1]);
 		            songName = inputLine[2];
 		            URL = inputLine[3];
+		            
 		            /*
 		             * Instruct the client specified to associate the given URL with the given
 		             * songName. This command should block until the client communicates with
 		             * one server.
 		             */
-			    
-			    
+		            validateClientId(clientId);
+		            Put putRequest = new Put(songName, URL);
+		            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
+		            
+		            // TODO
+		            // Block until client communicates with one server.
+		            //boolean blocked = true;
+		            //while (blocked)
+		            //{
+		            	// Keep querying client.
+		            //}
+		            
 		            break;
-            
             
 				case "get":
 			            clientId = Integer.parseInt(inputLine[1]);
@@ -182,9 +188,19 @@ public class Master
 			             * the given songName. The value should then be printed to standard out of 
 			             * the master script in the format specified in the handout. This command 
 			             * should block until the client communicates with one server.
-			             */ 
-				    
-				    
+			             */
+			            validateClientId(clientId);
+			            Get getRequest = new Get(songName);
+			            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
+			            
+			            // TODO
+			            // Block until client communicates with one server.
+			            //boolean blocked = true;
+			            //while (blocked)
+			            //{
+			            	// Keep querying client.
+			            //}
+			            
 			            break;
             
 		        case "delete":
@@ -196,57 +212,30 @@ public class Master
 		             * Instruct the client to delete the given songName from the playlist. 
 		             * This command should block until the client communicates with one server.
 		             */
+		            validateClientId(clientId);
+		            Delete deleteRequest = new Delete(songName);
+		            Master.clientProcesses.get(clientId).giveClientCommand(deleteRequest);
 		            
+		            // TODO
+		            // Block until client communicates with one server.
+		            //boolean blocked = true;
+		            //while (blocked)
+		            //{
+		            	// Keep querying client.
+		            //}
 		            
 		            break;
             
 	            // MIKE: added for testing.
 	        	case "commTest":
-	            
-	        		createNetController(0, Master.MAX_NUM_NODES_IN_SYSTEM);
-	        		createNetController(1, Master.MAX_NUM_NODES_IN_SYSTEM);
-	        		createNetController(2, Master.MAX_NUM_NODES_IN_SYSTEM);
 	        		
-	        		NetController nc_0 = netControllers.get(0);
-	        		NetController nc_1 = netControllers.get(1);
-	        		NetController nc_2 = netControllers.get(2);
-	        		
-	        		// Should all work.
-	        		nc_0.sendMsg(1, "HI");
-	        		nc_0.sendMsg(2, "HI");
-	        		nc_1.sendMsg(0, "HI");
-	        		nc_1.sendMsg(2, "HI");
-	        		nc_2.sendMsg(1, "HI");
-	        		nc_2.sendMsg(2, "HI");
-	        		
-	        		// Break from 0 to 1.
-	        		breakConnection(0, 1);
-	        		
-	        		// Should fail.
-	        		nc_0.sendMsg(1, "HI");
-	        		nc_1.sendMsg(0, "HI");
-	        		
-	        		restoreConnection(0, 1);
-	        		
-	        		// Should succeed.
-	        		nc_0.sendMsg(1, "HI");
-	        		nc_1.sendMsg(0, "HI");
-	        		
+	        		commTest();
 	        		break;
 	        		
 	        	// MIKE: added for testing alive server list.
 	        	case "createServerTest":
 	        		
-	        		joinClient(0, 0);
-	        		joinClient(1, 0);
-	        		joinServer(2);
-	        		joinServer(3);
-	        		joinClient(4, 0);
-	        		joinServer(5);
-	        		
-	        		System.out.println("Should be (2, 3, 5): " + Master.aliveServerNetControllerIDs);
-	        		System.out.println("Should be (2, 3, 5): " + Master.netControllers.get(0).getAliveServers());
-	        		
+	        		createServerTest();
 	        		break;
 	        		
 	        	// MIKE: added for API, this is the "clean up" command.
@@ -297,12 +286,29 @@ public class Master
         
         // Pass in the server ID to this client, they can use that as
         // the argument to send() when they talk to their server.
+        Client newClient = new Client(clientId, serverId);
         
-        // TODO:
-        // Create client.
-        
-        // TODO:
-        // Add this client to a list of Client objects?
+        // If the element at index clientId is not created yet.
+     	int highestIndex = Master.clientProcesses.size() - 1;
+     	if (highestIndex < clientId)
+     	{
+     		int difference = clientId - highestIndex;
+     		
+     		for (int i = 0; i < (difference - 1); i++)
+     		{
+     			Master.clientProcesses.add(null);
+     		}
+     		
+     		Master.clientProcesses.add(newClient);
+     	}
+     	else
+     	{
+     		Master.clientProcesses.set(clientId, newClient);
+     	}
+     	
+        // Create client thread.
+        Thread newClientThread = new Thread(newClient);
+        newClientThread.start();
 	}
 	
 	/**
@@ -434,6 +440,60 @@ public class Master
 					   	 e.getKey(), e.getValue().toString()));
 			}
 		}
+	}
+	
+	private static void commTest()
+	{
+		createNetController(0, Master.MAX_NUM_NODES_IN_SYSTEM);
+		createNetController(1, Master.MAX_NUM_NODES_IN_SYSTEM);
+		createNetController(2, Master.MAX_NUM_NODES_IN_SYSTEM);
+		
+		NetController nc_0 = netControllers.get(0);
+		NetController nc_1 = netControllers.get(1);
+		NetController nc_2 = netControllers.get(2);
+		
+		// Should all work.
+		nc_0.sendMsg(1, "HI");
+		nc_0.sendMsg(2, "HI");
+		nc_1.sendMsg(0, "HI");
+		nc_1.sendMsg(2, "HI");
+		nc_2.sendMsg(1, "HI");
+		nc_2.sendMsg(2, "HI");
+		
+		// Break from 0 to 1.
+		breakConnection(0, 1);
+		
+		// Should fail.
+		nc_0.sendMsg(1, "HI");
+		nc_1.sendMsg(0, "HI");
+		
+		restoreConnection(0, 1);
+		
+		// Should succeed.
+		nc_0.sendMsg(1, "HI");
+		nc_1.sendMsg(0, "HI");
+	}
+	
+	private static void createServerTest()
+	{
+		joinClient(0, 0);
+		joinClient(1, 0);
+		joinServer(2);
+		joinServer(3);
+		joinClient(4, 0);
+		joinServer(5);
+		
+		System.out.println("Should be (2, 3, 5): " + Master.aliveServerNetControllerIDs);
+		System.out.println("Should be (2, 3, 5): " + Master.netControllers.get(0).getAliveServers());
+	}
+	
+	private static void validateClientId(int clientId)
+	{
+		if ((clientId >= Master.clientProcesses.size()) || (Master.clientProcesses.get(clientId) == null))
+        {
+        	System.out.println("Invalid clientId!");
+        	System.exit(-1);;
+        }
 	}
   
 }
