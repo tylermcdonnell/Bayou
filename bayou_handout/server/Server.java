@@ -130,27 +130,6 @@ public class Server implements Runnable {
 			}
 			
 			//******************************************************************
-			//* SERVER REQUESTS
-			//******************************************************************
-			
-			if (m instanceof Join)
-			{
-				// Log Write
-				Write w = write((Join)m);
-				
-				// Assign new Server ID to joining process.
-				ServerID newServerID = new ServerID(this.ID, w.stamp());
-				JoinResponse r = new JoinResponse(newServerID);
-				this.network.sendMessageToProcess(s, r);
-			}
-			
-			if (m instanceof Retire)
-			{
-				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Retire)m);
-				
-			}
-			
-			//******************************************************************
 			//* ANTI-ENTROPY STATE EXCHANGE
 			//******************************************************************
 			// TODO: Anti-Entropy initiate message.
@@ -173,13 +152,29 @@ public class Server implements Runnable {
 				}
 			}
 			
-			if (m instanceof Write)
+			if (m instanceof Put || m instanceof Delete)
 			{
 				this.DB.add((Write)m);
+			}
+			
+			if (m instanceof Join)
+			{
+				// Log Write
+				Write w = write((Join)m);
 				
-				// TODO: Server join.
+				// Assign new Server ID to joining process.
+				ServerID newServerID = new ServerID(this.ID, w.stamp());
+				JoinResponse r = new JoinResponse(newServerID);
+				this.network.sendMessageToProcess(s, r);
+			}
+			
+			if (m instanceof Retire)
+			{
+				// Log Write
+				write((Retire)m);
 				
-				// TODO: Server retirement.
+				// Remove from version vector
+				this.V.remove(((Retire)m).ID);
 			}
 		}
 	}
