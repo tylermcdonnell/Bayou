@@ -12,16 +12,16 @@ public class StartAntiEntropy extends Message {
 
 	private static final long serialVersionUID = 1L;
 	
-	private ServerID sender;
+	public ServerID server;
 	
-	public StartAntiEntropy(String sender)
+	public StartAntiEntropy(ServerID server)
 	{
-		
+		this.server = server;
 	}
 	
 	@Override
 	public String toString() 
 	{
-		return String.format("StartAntiEntropy : Sender <%s> ", sender);
+		return String.format("StartAntiEntropy : Server <%s> ", this.server);
 	}
 }

@@ -2,14 +2,19 @@ package server;
 
 import java.util.Map;
 
+import message.GetResponse;
+import message.AcceptAntiEntropy;
 import message.Commit;
 import message.Delete;
+import message.ElectPrimary;
 import message.Get;
 import message.Message;
 import message.Put;
 import message.ReadRequest;
+import message.StartAntiEntropy;
 import message.Write;
 import message.WriteRequest;
+import message.WriteResponse;
 import socketFramework.NetController;
 
 /**
@@ -22,11 +27,17 @@ public class Server implements Runnable {
 	// Server's ID.
 	private ServerID ID;
 	
+	// Lamport logical clock for accept stamps.
+	private int logical;
+	
 	// Write Log.
 	private WriteLog DB;
 	
 	// Music Playlist.
 	private Playlist playlist;
+	
+	// Denotes whether this server is the primary, responsible for assigning commit sequence numbers.
+	private boolean isPrimary;
 	
 	// Net Controller used to communicate with other processes.
 	private NetController network;
@@ -48,11 +59,15 @@ public class Server implements Runnable {
 	 * @param netController		Placeholder for net controller. It must
 	 * 							allow new server to immediately communicate
 	 * 							with all servers in the system. How to?
+	 * @param joinThrough		This is the network ID (i.e., not ServerID)
+	 * 							of the process this server should attempt
+	 * 							to join the system through.
 	 */
-	public Server(boolean isInitialPrimary, NetController network)
+	public Server(boolean isInitialPrimary, NetController network, int joinThrough)
 	{
 		this.V 			= new VersionVector();
 		this.CSN 		= 0;
+		this.logical	= 0;
 		this.DB 		= new WriteLog();
 		this.playlist 	= new Playlist(this.DB);
 		this.network	= network;
@@ -60,9 +75,11 @@ public class Server implements Runnable {
 		if (isInitialPrimary)
 		{
 			this.ID = new ServerID();
+			this.isPrimary = true;
 		}
 		else 
 		{
+			this.isPrimary = false;
 			// TODO: Initiate join process
 		}
 	}
@@ -82,12 +99,21 @@ public class Server implements Runnable {
 			{
 				// TODO: Check session guarantees.
 				
-				// TODO: Assign accept stamp and package in Write.
+				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Put)m);
+				this.DB.add(w);
+				this.network.sendMessageToProcess(s, new WriteResponse(true));
 			}
 			
 			if (m instanceof ReadRequest)
 			{
 				// TODO: Check session guarantees.
+				
+				if (m instanceof Get)
+				{
+					Get g = (Get)m;
+					GetResponse r = new GetResponse(g.songName, this.playlist.get(g.songName));
+					this.network.sendMessageToProcess(s, r);
+				}
 			}
 			
 			//******************************************************************
@@ -95,27 +121,63 @@ public class Server implements Runnable {
 			//******************************************************************
 			// TODO: Anti-Entropy initiate message.
 			
-			// TODO: Primary hand-off.
+			if (m instanceof StartAntiEntropy)
+			{
+				StartAntiEntropy SAE = (StartAntiEntropy)m;
+				AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
+				this.network.sendMessageToProcess(s, r);
+			}
+			
+			if (m instanceof ElectPrimary)
+			{
+				this.isPrimary = true;
+				
+				// Stabilize all local writes by assigning CSNs.
+				for (Write w : this.DB.getTentativeWrites())
+				{
+					w.setCSN(this.assignCSN());
+				}
+			}
 			
 			if (m instanceof Write)
 			{
-				WriteRequest action = ((Write) m).action();
-				
-				if (action instanceof Put)
-				{
-					
-				}
-				
-				if (action instanceof Delete)
-				{
-					
-				}
+				this.DB.add((Write)m);
 				
 				// TODO: Server join.
 				
 				// TODO: Server retirement.
 			}
 		}
+	}
+	
+	/**
+	 * Assigns a commit sequence number on demand. 
+	 * 
+	 * @return
+	 * 		If this server is the primary, it will return and increment the
+	 * 		current commit sequence number. If this server is not the primary,
+	 * 		this will return infinity.
+	 */
+	private int assignCSN()
+	{
+		if (this.isPrimary)
+		{
+			return this.CSN++;
+		}
+		else
+		{
+			return Integer.MAX_VALUE;
+		}
+	}
+	
+	/**
+	 * Stamps an incoming write. This will automatically increment the logical
+	 * clock of this server.
+	 * @return
+	 */
+	private int stamp()
+	{
+		return this.logical++;
 	}
 	
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
