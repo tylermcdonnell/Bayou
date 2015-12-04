@@ -65,6 +65,7 @@ public class Server implements Runnable {
 	
 	// Used for test-case simulation. Pauses all anti-entropy messages. 
 	private volatile AtomicBoolean paused;
+
 	
 	/**
 	 * Constructor.
@@ -118,6 +119,7 @@ public class Server implements Runnable {
 		synchronized (this.paused)
 		{
 			this.paused.set(true);
+			this.paused.notify();
 		}
 	}
 	
@@ -133,7 +135,6 @@ public class Server implements Runnable {
 	@Override
 	public void run()
 	{
-		System.out.println("Started.");
 		while(true)
 		{
 			// Pause functionality for test case simulation.
