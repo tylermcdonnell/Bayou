@@ -1,6 +1,8 @@
 package server;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 
 import message.GetResponse;
 import message.Join;
@@ -51,6 +53,15 @@ public class Server implements Runnable {
 	// Highest Commit Sequence Number this server knows about.
 	private int CSN;
 	
+	// Scheduled time for next anti-entropy exchange.
+	private long nextAE;
+	
+	// Period between anti-entropy exchanges in MS.
+	private final int ANTI_ENTROPY_PERIOD = 200;
+	
+	// Random number generator.
+	private Random random;
+	
 	/**
 	 * Constructor.
 	 * 
@@ -75,6 +86,8 @@ public class Server implements Runnable {
 		this.DB 		= new WriteLog();
 		this.playlist 	= new Playlist(this.DB);
 		this.network	= network;
+		this.nextAE		= Long.MAX_VALUE;
+		this.random 	= new Random();
 		
 		if (isInitialPrimary)
 		{
@@ -91,6 +104,20 @@ public class Server implements Runnable {
 	@Override
 	public void run()
 	{
+		// Check if it's time to initiate a new anti-entropy exchange. For now,
+		// this does not use any type of state machine to guide anti-entropy 
+		// exchanges. In other words, one begins every 100 milliseconds, regardless
+		// of whether one is already in progress or failed. This can certainly be
+		// problematic if the period is so low that the messages flood the system.
+		if (System.currentTimeMillis() >= this.nextAE)
+		{
+			this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
+			
+			ArrayList<Integer> servers = this.network.getAliveServers();
+			int target = servers.get(random.nextInt(servers.size()));
+			this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
+		}
+		
 		for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
 		{
 			int s 		= e.getKey();
@@ -102,6 +129,7 @@ public class Server implements Runnable {
 			if (m instanceof JoinResponse)
 			{
 				this.ID = ((JoinResponse)m).ID;
+				this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
 			}
 			if (this.ID == null)
 			{
@@ -177,8 +205,7 @@ public class Server implements Runnable {
 				this.V.remove(((Retire)m).ID);
 			}
 		}
-	}
-	
+	}	
 	
 	/**
 	 * Assigns a CSN and accept-stamp for a write request and logs it.
