@@ -3,6 +3,8 @@ package server;
 import java.util.Map;
 
 import message.GetResponse;
+import message.Join;
+import message.JoinResponse;
 import message.AcceptAntiEntropy;
 import message.Commit;
 import message.Delete;
@@ -65,6 +67,7 @@ public class Server implements Runnable {
 	 */
 	public Server(boolean isInitialPrimary, NetController network, int joinThrough)
 	{
+		this.ID			= null;
 		this.V 			= new VersionVector();
 		this.CSN 		= 0;
 		this.logical	= 0;
@@ -80,7 +83,7 @@ public class Server implements Runnable {
 		else 
 		{
 			this.isPrimary = false;
-			// TODO: Initiate join process
+			this.network.sendMessageToProcess(joinThrough, new Join());
 		}
 	}
 	
@@ -91,6 +94,18 @@ public class Server implements Runnable {
 		{
 			int s 		= e.getKey();
 			Message m 	= e.getValue();
+			
+			//******************************************************************
+			//* SERVER ID ASSIGNMENT - Do NOTHING until we are assigned an ID.
+			//******************************************************************
+			if (m instanceof JoinResponse)
+			{
+				this.ID = ((JoinResponse)m).ID;
+			}
+			if (this.ID == null)
+			{
+				continue;
+			}
 			
 			//******************************************************************
 			//* CLIENT REQUESTS
@@ -114,6 +129,18 @@ public class Server implements Runnable {
 					GetResponse r = new GetResponse(g.songName, this.playlist.get(g.songName));
 					this.network.sendMessageToProcess(s, r);
 				}
+			}
+			
+			//******************************************************************
+			//* SERVER REQUESTS
+			//******************************************************************
+			
+			if (m instanceof Join)
+			{
+				Write w = new Write(this.ID, this.assignCSN(), this.stamp(), (Join)m);
+				ServerID newServerID = new ServerID(this.ID, w.stamp());
+				JoinResponse r = new JoinResponse(newServerID);
+				this.network.sendMessageToProcess(s, r);
 			}
 			
 			//******************************************************************
