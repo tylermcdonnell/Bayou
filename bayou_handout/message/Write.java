@@ -29,12 +29,13 @@ public class Write extends Message implements Comparable<Write> {
 	 * @param server		Server which first accepted this write.
 	 * @param stamp			Stamp served which accepted this write gave to it.
 	 */
-	public Write(ServerID server, int stamp, WriteRequest action)
+	public Write(ServerID server, int CSN, int stamp, WriteRequest action)
 	{
 		this.CSN 	= Integer.MAX_VALUE;
 		this.server	= server;
 		this.stamp 	= stamp;
 		this.action = action;
+		this.CSN	= CSN;
 	}
 	
 	public int CSN()
