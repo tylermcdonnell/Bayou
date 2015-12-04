@@ -12,13 +12,22 @@ import message.Get;
 import message.Message;
 import message.Put;
 import message.WriteRequest;
+import server.Server;
 import socketFramework.Config;
 import socketFramework.NetController;
 
 public class Master
 {
+	// Who the current primary server is (their ID).
+	public static int primaryServerId = -1;
+	
 	// A list of the process objects underlying the client thread handles.
+	// Note that a client with ID = x will be stored at index x.
 	public static ArrayList<Client> clientProcesses = new ArrayList<Client>();
+	
+	// A list of the process objects underlying the client thread handles.
+	// Note that a server with ID = x will be stored at index x.
+	public static ArrayList<Server> serverProcesses = new ArrayList<Server>();
 	
 	// The maximum number of nodes this system can handle.
 	// Note: this is how many ports the system will use. See NetController
@@ -79,6 +88,11 @@ public class Master
 		            // to remove it from the list.
 		            
 		            // .... serverNetControllerIDs.remove(retiredServerId);
+		            
+		            // TODO: If we are retiring the primary, update the primary server Id
+		            // variable.
+		            // if (serverId == Master.primaryServerId) ...
+		            // Master.primaryServerId = ...
 		            break;
 		            
 		        case "joinClient":
@@ -264,21 +278,51 @@ public class Master
 	} // End main.
   
 	
-	
 	private static void joinServer(int serverId)
 	{
 		// Create a NetController for this server.
-        createNetController(serverId, Master.MAX_NUM_NODES_IN_SYSTEM);
+        NetController nc = createNetController(serverId, Master.MAX_NUM_NODES_IN_SYSTEM);
         
         // Add its index to the list of alive server IDs.
         Master.aliveServerNetControllerIDs.add(serverId);
         
-        // TODO:
-        // Create server.
+        Server newServer = null;
         
-        // TODO:
-        // Add this server to a list of Server objects?
+        if (Master.serverProcesses.size() == 0)
+        {
+        	// This server is not initial primary.
+        	Master.primaryServerId = serverId;
+        	newServer = new Server(true, nc, serverId);
+        }
+        else
+        {
+        	// This server is not initial primary.
+        	newServer = new Server(false, nc, Master.primaryServerId);
+        }
+        
+        // If the element at index serverId is not created yet.
+     	int highestIndex = Master.serverProcesses.size() - 1;
+     	if (highestIndex < serverId)
+     	{
+     		int difference = serverId - highestIndex;
+     		
+     		for (int i = 0; i < (difference - 1); i++)
+     		{
+     			Master.serverProcesses.add(null);
+     		}
+     		
+     		Master.serverProcesses.add(newServer);
+     	}
+     	else
+     	{
+     		Master.serverProcesses.set(serverId, newServer);
+     	}
+     	
+        // Create server thread.
+        Thread newServerThread = new Thread(newServer);
+        newServerThread.start();
 	}
+	
 	
 	private static void joinClient(int clientId, int serverId)
 	{

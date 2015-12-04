@@ -62,6 +62,8 @@ public class Server implements Runnable {
 	// Random number generator.
 	private Random random;
 	
+	private boolean printNew = true;
+	
 	/**
 	 * Constructor.
 	 * 
@@ -104,6 +106,12 @@ public class Server implements Runnable {
 	@Override
 	public void run()
 	{
+		if (printNew)
+		{
+			System.out.println("Server " + this.ID + " is up!");
+			printNew = false;
+		}
+		
 		// Check if it's time to initiate a new anti-entropy exchange. For now,
 		// this does not use any type of state machine to guide anti-entropy 
 		// exchanges. In other words, one begins every 100 milliseconds, regardless
