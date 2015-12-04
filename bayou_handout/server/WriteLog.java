@@ -119,12 +119,12 @@ public class WriteLog {
 		ServerID primary = new ServerID();
 		ServerID secondary = new ServerID(primary, 1);
 		
-		Write w1 = new Write(primary, 1, new Delete(""));
+		Write w1 = new Write(primary, Integer.MAX_VALUE, 1, new Delete(""));
 		w1.setCSN(1);
-		Write w2 = new Write(primary, 2, new Delete(""));
+		Write w2 = new Write(primary, Integer.MAX_VALUE, 2, new Delete(""));
 		w2.setCSN(2);
-		Write w3 = new Write(primary, 3, new Delete(""));
-		Write w4 = new Write(secondary, 3, new Delete(""));
+		Write w3 = new Write(primary, Integer.MAX_VALUE, 3, new Delete(""));
+		Write w4 = new Write(secondary, Integer.MAX_VALUE, 3, new Delete(""));
 		
 		log.add(w4);
 		log.add(w3);
