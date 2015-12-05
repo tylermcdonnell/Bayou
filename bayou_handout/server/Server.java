@@ -58,7 +58,7 @@ public class Server implements Runnable {
 	private long nextAE;
 	
 	// Period between anti-entropy exchanges in MS.
-	private final int ANTI_ENTROPY_PERIOD = 400;
+	public static final int ANTI_ENTROPY_PERIOD = 400;
 	
 	// Random number generator.
 	private Random random;
@@ -132,6 +132,14 @@ public class Server implements Runnable {
 		}
 	}
 	
+	public synchronized void printLog()
+	{
+		synchronized(this.DB)
+		{
+			this.DB.print();	
+		}
+	}
+	
 	@Override
 	public void run()
 	{
@@ -160,7 +168,7 @@ public class Server implements Runnable {
 			// problematic if the period is so low that the messages flood the system.
 			if (System.currentTimeMillis() >= this.nextAE)
 			{
-				this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
+				this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 				
 				// Choose target for anti-entropy exchange and initiate.
 				ArrayList<Integer> servers = this.network.getAliveServers();
@@ -190,7 +198,7 @@ public class Server implements Runnable {
 				if (m instanceof JoinResponse)
 				{
 					this.ID = ((JoinResponse)m).ID;
-					this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
+					this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 				}
 				if (this.ID == null)
 				{
@@ -298,8 +306,10 @@ public class Server implements Runnable {
 					// Log Write
 					write((Retire)m);
 					
-					// Remove from version vector
-					this.V.remove(((Retire)m).ID);
+					// Decided not to remove retired servers from the Version Vector.
+					// This is only an optimization, and one that apparently comes at
+					// the cost of buggy session guarantees.
+					//this.V.remove(((Retire)m).ID);
 				}
 			}
 		}

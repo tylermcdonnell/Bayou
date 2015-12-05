@@ -112,6 +112,18 @@ public class WriteLog {
 		return new ArrayList<Write>(this.writes);
 	}
 	
+	public void print()
+	{
+		for (Write w : getCommittedWrites())
+		{
+			System.out.println(String.format("%s:TRUE", w.toString()));
+		}
+		for (Write w : getTentativeWrites())
+		{
+			System.out.println(String.format("%s:FALSE", w.toString()));
+		}
+	}
+	
 	public static boolean test()
 	{
 		WriteLog log = new WriteLog();
