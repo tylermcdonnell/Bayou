@@ -235,14 +235,6 @@ public class Master
 	            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
 	            Master.clientProcesses.get(clientId).waitClient();
 	            
-	            // TODO
-	            // Block until client communicates with one server.
-	            //boolean blocked = true;
-	            //while (blocked)
-	            //{
-	            	// Keep querying client.
-	            //}
-	            
 	            break;
         
 			case "get":
@@ -259,13 +251,6 @@ public class Master
 	            Get getRequest = new Get(songName);
 	            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
 	            Master.clientProcesses.get(clientId).waitClient();
-	            // TODO
-	            // Block until client communicates with one server.
-	            //boolean blocked = true;
-	            //while (blocked)
-	            //{
-	            	// Keep querying client.
-	            //}
 	            
 	            break;
         
@@ -282,13 +267,6 @@ public class Master
 	            Delete deleteRequest = new Delete(songName);
 	            Master.clientProcesses.get(clientId).giveClientCommand(deleteRequest);
 	            Master.clientProcesses.get(clientId).waitClient();
-	            // TODO
-	            // Block until client communicates with one server.
-	            //boolean blocked = true;
-	            //while (blocked)
-	            //{
-	            	// Keep querying client.
-	            //}
 	            
 	            break;
 	            
@@ -325,8 +303,6 @@ public class Master
   		} // End switch.
 	} // End main.
 	
-	
-  
 	
 	private static void joinServer(int serverId)
 	{
