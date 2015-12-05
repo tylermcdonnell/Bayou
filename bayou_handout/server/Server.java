@@ -58,7 +58,7 @@ public class Server implements Runnable {
 	private long nextAE;
 	
 	// Period between anti-entropy exchanges in MS.
-	private final int ANTI_ENTROPY_PERIOD = 400;
+	public static final int ANTI_ENTROPY_PERIOD = 400;
 	
 	// Random number generator.
 	private Random random;

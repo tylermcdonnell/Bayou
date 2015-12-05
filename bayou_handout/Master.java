@@ -137,8 +137,13 @@ public class Master
 		        	 * Pause the system and don't allow any Anti-Entropy messages to
 		        	 * propagate through the system
 		        	 */
-        	
-        	
+		        	for (Server s : Master.serverProcesses)
+		        	{
+		        		if (s != null)
+		        		{
+		        			s.pause();
+		        		}
+		        	}	
 		        	break;
             
 		        case "start":
@@ -146,8 +151,13 @@ public class Master
 		        	 * Resume the system and allow any Anti-Entropy messages to
 		        	 * propagate through the system
 		        	 */
-        	
-        	
+		        	for (Server s : Master.serverProcesses)
+		        	{
+		        		if (s != null)
+		        		{
+		        			s.start();
+		        		}
+		        	}
 		        	break;
             
 		        case "stabilize":
@@ -157,7 +167,14 @@ public class Master
 		             * time that this function blocks for should increase linearly with the 
 		             * number of servers in the system.
 		             */
-		
+		        	try
+		        	{
+		        		Thread.sleep(2 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
+		        	}
+		        	catch (InterruptedException exc)
+		        	{
+		        		// Shouldn't happen.
+		        	}
 		
 		        	break;
             
