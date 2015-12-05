@@ -47,12 +47,6 @@ public class Master
 	
 	// A list of the NetController IDs for servers that are alive.
 	public static ArrayList<Integer> aliveServerNetControllerIDs = new ArrayList<Integer>();
-	
-	// TODO: add a list of clients?
-	
-	// TODO: add a list of servers?
-	
-	// TODO: make a queue between the master and each client?
 
 	
 	public static void main(String[] args)
@@ -67,8 +61,8 @@ public class Master
 		{
 			String[] inputLine = scan.nextLine().split(" ");
 			execute(inputLine);
-		} // End while
-	} // End main
+		}
+	}
 	
 	
 	private static void execute(String [] inputLine)
@@ -230,28 +224,28 @@ public class Master
 	            break;
         
 			case "get":
-		            clientId = Integer.parseInt(inputLine[1]);
-		            songName = inputLine[2];
-		            
-		            /*
-		             * Instruct the client specified to attempt to get the URL associated with
-		             * the given songName. The value should then be printed to standard out of 
-		             * the master script in the format specified in the handout. This command 
-		             * should block until the client communicates with one server.
-		             */
-		            validateClientId(clientId);
-		            Get getRequest = new Get(songName);
-		            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
-		            
-		            // TODO
-		            // Block until client communicates with one server.
-		            //boolean blocked = true;
-		            //while (blocked)
-		            //{
-		            	// Keep querying client.
-		            //}
-		            
-		            break;
+	            clientId = Integer.parseInt(inputLine[1]);
+	            songName = inputLine[2];
+	            
+	            /*
+	             * Instruct the client specified to attempt to get the URL associated with
+	             * the given songName. The value should then be printed to standard out of 
+	             * the master script in the format specified in the handout. This command 
+	             * should block until the client communicates with one server.
+	             */
+	            validateClientId(clientId);
+	            Get getRequest = new Get(songName);
+	            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
+	            
+	            // TODO
+	            // Block until client communicates with one server.
+	            //boolean blocked = true;
+	            //while (blocked)
+	            //{
+	            	// Keep querying client.
+	            //}
+	            
+	            break;
         
 	        case "delete":
 	        	
@@ -310,7 +304,7 @@ public class Master
         		
         		break;
         
-  		} // End switch.    
+  		} // End switch.
 	} // End main.
 	
 	
@@ -323,6 +317,15 @@ public class Master
         
         // Add its index to the list of alive server IDs.
         Master.aliveServerNetControllerIDs.add(serverId);
+        
+        // Add this index to all NetControllers.
+        for (int i = 0; i < Master.netControllers.size(); i++)
+        {
+        	if (Master.netControllers.get(i) != null)
+        	{
+        		Master.netControllers.get(i).addToAliveServers(serverId);
+        	}
+        }
         
         Server newServer = null;
         
@@ -490,7 +493,7 @@ public class Master
 		try {
 
 			Config config = new Config(fileName);
-			nc = new NetController(config, numProcesses, processNumber, Master.aliveServerNetControllerIDs);
+			nc = new NetController(config, numProcesses, processNumber);
 
 		} catch (Exception e) {
 			e.printStackTrace();
