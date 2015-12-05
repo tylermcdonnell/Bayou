@@ -12,7 +12,7 @@ public class WriteResponse extends Message
 	
 	public WriteResponse(boolean success, VersionVector V)
 	{
-		this.V			= new VersionVector();
+		this.V			= V;
 		this.success 	= success;
 	}
 	

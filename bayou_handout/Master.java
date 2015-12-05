@@ -73,6 +73,8 @@ public class Master
   
 		//System.out.println("Master Command: " + inputLine[0]);
 		
+		//System.out.println(inputLine[0]);
+		
 		switch (inputLine[0])
 		{
 			case "joinServer":
@@ -212,6 +214,7 @@ public class Master
 	            validateClientId(clientId);
 	            Put putRequest = new Put(songName, URL);
 	            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
+	            Master.clientProcesses.get(clientId).waitClient();
 	            
 	            // TODO
 	            // Block until client communicates with one server.
@@ -236,7 +239,7 @@ public class Master
 	            validateClientId(clientId);
 	            Get getRequest = new Get(songName);
 	            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
-	            
+	            Master.clientProcesses.get(clientId).waitClient();
 	            // TODO
 	            // Block until client communicates with one server.
 	            //boolean blocked = true;
@@ -259,7 +262,7 @@ public class Master
 	            validateClientId(clientId);
 	            Delete deleteRequest = new Delete(songName);
 	            Master.clientProcesses.get(clientId).giveClientCommand(deleteRequest);
-	            
+	            Master.clientProcesses.get(clientId).waitClient();
 	            // TODO
 	            // Block until client communicates with one server.
 	            //boolean blocked = true;
@@ -370,34 +373,40 @@ public class Master
 	
 	private static void joinClient(int clientId, int serverId)
 	{
-		// Create a NetController for this client.
-		NetController nc = createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
-        
-        // Pass in the server ID to this client, they can use that as
-        // the argument to send() when they talk to their server.
-        Client newClient = new Client(clientId, serverId, nc);
-        
-        // If the element at index clientId is not created yet.
-     	int highestIndex = Master.clientProcesses.size() - 1;
-     	if (highestIndex < clientId)
-     	{
-     		int difference = clientId - highestIndex;
-     		
-     		for (int i = 0; i < (difference - 1); i++)
-     		{
-     			Master.clientProcesses.add(null);
-     		}
-     		
-     		Master.clientProcesses.add(newClient);
-     	}
-     	else
-     	{
-     		Master.clientProcesses.set(clientId, newClient);
-     	}
-     	
-        // Create client thread.
-        Thread newClientThread = new Thread(newClient);
-        newClientThread.start();
+		if (Master.clientProcesses.size() < clientId ||
+			Master.clientProcesses.get(clientId) == null)
+		{
+			// Create a NetController for this client.
+			NetController nc = createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
+	        
+	        // Pass in the server ID to this client, they can use that as
+	        // the argument to send() when they talk to their server.
+	        Client newClient = new Client(clientId, serverId, nc);
+	        
+	        // If the element at index clientId is not created yet.
+	     	int highestIndex = Master.clientProcesses.size() - 1;
+	     	if (highestIndex < clientId)
+	     	{
+	     		int difference = clientId - highestIndex;
+	     		
+	     		for (int i = 0; i < (difference - 1); i++)
+	     		{
+	     			Master.clientProcesses.add(null);
+	     		}
+	     		
+	     		Master.clientProcesses.add(newClient);
+	     	}
+	     	else
+	     	{
+	     		Master.clientProcesses.set(clientId, newClient);
+	     	}
+	     	
+	        // Create client thread.
+	        Thread newClientThread = new Thread(newClient);
+	        newClientThread.start();
+		}
+		
+		Master.clientProcesses.get(clientId).connect(serverId);
 	}
 	
 	/**

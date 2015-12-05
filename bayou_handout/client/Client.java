@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import message.GetResponse;
 import message.Message;
@@ -22,7 +23,7 @@ import socketFramework.NetController;
 public class Client implements Runnable {
 	
 	// The server I talk to for requests.
-	private volatile int serverId;
+	private volatile AtomicInteger serverId;
 	
 	// A queue the Master can issue this client commands on.
 	LinkedList<Message> clientReceiveQueue;
@@ -47,7 +48,7 @@ public class Client implements Runnable {
 	{
 		this.clientReceiveQueue = new LinkedList<Message>();
 		
-		this.serverId = myServerId;
+		this.serverId = new AtomicInteger(myServerId);
 		this.myClientId = myClientId;
 		
 		this.R = new VersionVector();
@@ -58,7 +59,10 @@ public class Client implements Runnable {
 		this.network = network;
 	}
 	
-	
+	public synchronized void connect(int serverId)
+	{
+		this.serverId.set(serverId);
+	}
 	@Override
 	public void run()
 	{
@@ -82,14 +86,14 @@ public class Client implements Runnable {
 				{
 					WriteRequest wr = (WriteRequest)m;
 					
-					//System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+					//System.out.println("Client " + this.myClientId + " received from master: " + wr.toString() + " " + this.serverId.get());
 					
 					// Session guarantees.
 					wr.setR(this.R);
 					wr.setW(this.W);
 					
 					// Dispatch request to server.
-					this.network.sendMessageToProcess(this.serverId, wr);
+					this.network.sendMessageToProcess(this.serverId.get(), wr);	
 				}
 				
 				if (m instanceof ReadRequest)
@@ -103,7 +107,7 @@ public class Client implements Runnable {
 					rr.setW(this.W);
 					
 					// Dispatch request to server.
-					this.network.sendMessageToProcess(this.serverId, rr);
+					this.network.sendMessageToProcess(this.serverId.get(), rr);	
 				}
 			}
 			
@@ -165,15 +169,16 @@ public class Client implements Runnable {
 	 */
 	public synchronized void giveClientCommand(Message m)
 	{
-		synchronized (this.busy)
-		{
-			this.busy.set(true);
-		}
+		this.busy.set(true);
+		
 		synchronized(this.clientReceiveQueue)
 		{
 			this.clientReceiveQueue.add(m);
 		}
-		
+	}
+	
+	public synchronized void waitClient()
+	{
 		synchronized(this.busy)
 		{
 			try

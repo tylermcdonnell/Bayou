@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Abstraction for the <ServerID, TimeStamp> vector used for Bayou exchanges.
@@ -150,6 +151,14 @@ public class VersionVector implements Serializable {
 			}
 		}
 		return true;
+	}
+	
+	public void print()
+	{
+		for (Map.Entry<ServerID, Integer> e : this.vector.entrySet())
+		{
+			System.out.println(String.format("<%s> <%d>", e.getKey(), e.getValue()));
+		}
 	}
 	
 	public static boolean dominatesTest()

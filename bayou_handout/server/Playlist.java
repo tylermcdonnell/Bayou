@@ -52,7 +52,15 @@ public class Playlist
 					h.remove(d.songName);
 				}
 			}
-			return h.get(songName);
+			String url = h.get(songName);
+			if (url == null)
+			{
+				return "ERR_KEY";
+			}
+			else
+			{
+				return url;
+			}
 		}
 		catch (Exception exc)
 		{
