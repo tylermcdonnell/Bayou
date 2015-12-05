@@ -25,5 +25,6 @@ put 2 Mine TaylorSwift.com
 get 2 Mine
 joinClient 2 1
 put 2 BloodBrothers LukeBryan.com
+printLog 0
 printLog 1
 clean
