@@ -1,5 +1,7 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -52,231 +54,249 @@ public class Master
 	
 	// TODO: make a queue between the master and each client?
 
-	public static void main(String [] args)
+	
+	public static void main(String[] args)
 	{
 		Scanner scan = new Scanner(System.in);
+		
+		//Logger log = Logger.getInstance();
+		//Thread logThread = new Thread(log);
+		//logThread.start();
 		
 		while (scan.hasNextLine())
 		{
 			String[] inputLine = scan.nextLine().split(" ");
-			int clientId, serverId, id1, id2;
-			String songName, URL;
-      
-			switch (inputLine[0])
-			{
-				case "joinServer":
+			execute(inputLine);
+		} // End while
+	} // End main
+	
+	
+	private static void execute(String [] inputLine)
+	{
+
+		int clientId, serverId, id1, id2;
+		String songName, URL;
+  
+		System.out.println(inputLine[0]);
+		
+		switch (inputLine[0])
+		{
+			case "joinServer":
+    		
+				serverId = Integer.parseInt(inputLine[1]);
+        
+				/*
+				 * Start up a new server with this id and connect it to all servers
+				 */
+				joinServer(serverId);
+            	break;
+            
+	        case "retireServer":
+	        	
+	            serverId = Integer.parseInt(inputLine[1]);
+	            /*
+	             * Retire the server with the id specified. This should block until
+	             * the server can tell another server of its retirement
+	             */
+	            
+	            // TODO: remove this server's ID from the list of alive server IDs,
+	            // but ONLY ONCE the retired server has talked to one other server
+	            // (I think that's supposed to be blocking anyways, else the server
+	            // which is retiring can simply call a Master (or NetController) method 
+	            // to remove it from the list.
+	            
+	            // .... serverNetControllerIDs.remove(retiredServerId);
+	            
+	            // TODO: If we are retiring the primary, update the primary server Id
+	            // variable.
+	            // if (serverId == Master.primaryServerId) ...
+	            // Master.primaryServerId = ...
+	            break;
+	            
+	        case "joinClient":
+	        	
+	            clientId = Integer.parseInt(inputLine[1]);
+	            serverId = Integer.parseInt(inputLine[2]);
+	            
+	            /*
+	             * Start a new client with the id specified and connect it to 
+	             * the server
+	             */
+	            joinClient(clientId, serverId);
+	            break;
+	            
+	        case "breakConnection":
+	        	
+	        	id1 = Integer.parseInt(inputLine[1]);
+	        	id2 = Integer.parseInt(inputLine[2]);
+	            
+	        	/*
+	             * Break the connection between a client and a server or between
+	             * two servers
+	             */
+	        	breakConnection(id1, id2);
+	            break;
+            
+	        case "restoreConnection":
+		
+	        	id1 = Integer.parseInt(inputLine[1]);
+	        	id2 = Integer.parseInt(inputLine[2]);
+            
+	        	/*
+	        	 * Restore the connection between a client and a server or between
+	        	 * two servers
+	        	 */
+	        	restoreConnection(id1, id2);
+	        	break;
+        
+	        case "pause":
+	        	/*
+	        	 * Pause the system and don't allow any Anti-Entropy messages to
+	        	 * propagate through the system
+	        	 */
+    	
+    	
+	        	break;
+        
+	        case "start":
+	        	/*
+	        	 * Resume the system and allow any Anti-Entropy messages to
+	        	 * propagate through the system
+	        	 */
+    	
+    	
+	        	break;
+        
+	        case "stabilize":
+	        	/*
+	             * Block until there are enough Anti-Entropy messages for all values to 
+	             * propagate through the currently connected servers. In general, the 
+	             * time that this function blocks for should increase linearly with the 
+	             * number of servers in the system.
+	             */
+	
+	
+	        	break;
+        
+	        case "printLog":
+	            serverId = Integer.parseInt(inputLine[1]);
+	            /*
+	             * Print out a server's operation log in the format specified in the
+	             * hand out.
+	             */
+	            
+	            
+	            break;
+        
+	        case "put":
+	            clientId = Integer.parseInt(inputLine[1]);
+	            songName = inputLine[2];
+	            URL = inputLine[3];
+	            
+	            /*
+	             * Instruct the client specified to associate the given URL with the given
+	             * songName. This command should block until the client communicates with
+	             * one server.
+	             */
+	            validateClientId(clientId);
+	            Put putRequest = new Put(songName, URL);
+	            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
+	            
+	            // TODO
+	            // Block until client communicates with one server.
+	            //boolean blocked = true;
+	            //while (blocked)
+	            //{
+	            	// Keep querying client.
+	            //}
+	            
+	            break;
+        
+			case "get":
+		            clientId = Integer.parseInt(inputLine[1]);
+		            songName = inputLine[2];
+		            
+		            /*
+		             * Instruct the client specified to attempt to get the URL associated with
+		             * the given songName. The value should then be printed to standard out of 
+		             * the master script in the format specified in the handout. This command 
+		             * should block until the client communicates with one server.
+		             */
+		            validateClientId(clientId);
+		            Get getRequest = new Get(songName);
+		            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
+		            
+		            // TODO
+		            // Block until client communicates with one server.
+		            //boolean blocked = true;
+		            //while (blocked)
+		            //{
+		            	// Keep querying client.
+		            //}
+		            
+		            break;
+        
+	        case "delete":
+	        	
+	            clientId = Integer.parseInt(inputLine[1]);
+	            songName = inputLine[2];
+	            
+	            /*
+	             * Instruct the client to delete the given songName from the playlist. 
+	             * This command should block until the client communicates with one server.
+	             */
+	            validateClientId(clientId);
+	            Delete deleteRequest = new Delete(songName);
+	            Master.clientProcesses.get(clientId).giveClientCommand(deleteRequest);
+	            
+	            // TODO
+	            // Block until client communicates with one server.
+	            //boolean blocked = true;
+	            //while (blocked)
+	            //{
+	            	// Keep querying client.
+	            //}
+	            
+	            break;
+        
+            // MIKE: added for testing.
+        	case "commTest":
         		
-					serverId = Integer.parseInt(inputLine[1]);
-            
-					/*
-					 * Start up a new server with this id and connect it to all servers
-					 */
-					joinServer(serverId);
-	            	break;
-	            
-		        case "retireServer":
-		        	
-		            serverId = Integer.parseInt(inputLine[1]);
-		            /*
-		             * Retire the server with the id specified. This should block until
-		             * the server can tell another server of its retirement
-		             */
-		            
-		            // TODO: remove this server's ID from the list of alive server IDs,
-		            // but ONLY ONCE the retired server has talked to one other server
-		            // (I think that's supposed to be blocking anyways, else the server
-		            // which is retiring can simply call a Master (or NetController) method 
-		            // to remove it from the list.
-		            
-		            // .... serverNetControllerIDs.remove(retiredServerId);
-		            
-		            // TODO: If we are retiring the primary, update the primary server Id
-		            // variable.
-		            // if (serverId == Master.primaryServerId) ...
-		            // Master.primaryServerId = ...
-		            break;
-		            
-		        case "joinClient":
-		        	
-		            clientId = Integer.parseInt(inputLine[1]);
-		            serverId = Integer.parseInt(inputLine[2]);
-		            
-		            /*
-		             * Start a new client with the id specified and connect it to 
-		             * the server
-		             */
-		            joinClient(clientId, serverId);
-		            break;
-		            
-		        case "breakConnection":
-		        	
-		        	id1 = Integer.parseInt(inputLine[1]);
-		        	id2 = Integer.parseInt(inputLine[2]);
-		            
-		        	/*
-		             * Break the connection between a client and a server or between
-		             * two servers
-		             */
-		        	breakConnection(id1, id2);
-		            break;
-	            
-		        case "restoreConnection":
-			
-		        	id1 = Integer.parseInt(inputLine[1]);
-		        	id2 = Integer.parseInt(inputLine[2]);
-	            
-		        	/*
-		        	 * Restore the connection between a client and a server or between
-		        	 * two servers
-		        	 */
-		        	restoreConnection(id1, id2);
-		        	break;
-            
-		        case "pause":
-		        	/*
-		        	 * Pause the system and don't allow any Anti-Entropy messages to
-		        	 * propagate through the system
-		        	 */
+        		commTest();
+        		break;
+        		
+        	// MIKE: added for testing alive server list.
+        	case "createServerTest":
+        		
+        		createServerTest();
+        		break;
+        		
+        	// MIKE: added for API, this is the "clean up" command.
+        	case "c":
         	
+        		// TODO
+        		// Clean up all NetControllers and state -- create a fresh
+        		// slate.
         	
-		        	break;
-            
-		        case "start":
-		        	/*
-		        	 * Resume the system and allow any Anti-Entropy messages to
-		        	 * propagate through the system
-		        	 */
+        		break;
         	
-        	
-		        	break;
-            
-		        case "stabilize":
-		        	/*
-		             * Block until there are enough Anti-Entropy messages for all values to 
-		             * propagate through the currently connected servers. In general, the 
-		             * time that this function blocks for should increase linearly with the 
-		             * number of servers in the system.
-		             */
-		
-		
-		        	break;
-            
-		        case "printLog":
-		            serverId = Integer.parseInt(inputLine[1]);
-		            /*
-		             * Print out a server's operation log in the format specified in the
-		             * hand out.
-		             */
-		            
-		            
-		            break;
-            
-		        case "put":
-		            clientId = Integer.parseInt(inputLine[1]);
-		            songName = inputLine[2];
-		            URL = inputLine[3];
-		            
-		            /*
-		             * Instruct the client specified to associate the given URL with the given
-		             * songName. This command should block until the client communicates with
-		             * one server.
-		             */
-		            validateClientId(clientId);
-		            Put putRequest = new Put(songName, URL);
-		            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
-		            
-		            // TODO
-		            // Block until client communicates with one server.
-		            //boolean blocked = true;
-		            //while (blocked)
-		            //{
-		            	// Keep querying client.
-		            //}
-		            
-		            break;
-            
-				case "get":
-			            clientId = Integer.parseInt(inputLine[1]);
-			            songName = inputLine[2];
-			            
-			            /*
-			             * Instruct the client specified to attempt to get the URL associated with
-			             * the given songName. The value should then be printed to standard out of 
-			             * the master script in the format specified in the handout. This command 
-			             * should block until the client communicates with one server.
-			             */
-			            validateClientId(clientId);
-			            Get getRequest = new Get(songName);
-			            Master.clientProcesses.get(clientId).giveClientCommand(getRequest);
-			            
-			            // TODO
-			            // Block until client communicates with one server.
-			            //boolean blocked = true;
-			            //while (blocked)
-			            //{
-			            	// Keep querying client.
-			            //}
-			            
-			            break;
-            
-		        case "delete":
-		        	
-		            clientId = Integer.parseInt(inputLine[1]);
-		            songName = inputLine[2];
-		            
-		            /*
-		             * Instruct the client to delete the given songName from the playlist. 
-		             * This command should block until the client communicates with one server.
-		             */
-		            validateClientId(clientId);
-		            Delete deleteRequest = new Delete(songName);
-		            Master.clientProcesses.get(clientId).giveClientCommand(deleteRequest);
-		            
-		            // TODO
-		            // Block until client communicates with one server.
-		            //boolean blocked = true;
-		            //while (blocked)
-		            //{
-		            	// Keep querying client.
-		            //}
-		            
-		            break;
-            
-	            // MIKE: added for testing.
-	        	case "commTest":
-	        		
-	        		commTest();
-	        		break;
-	        		
-	        	// MIKE: added for testing alive server list.
-	        	case "createServerTest":
-	        		
-	        		createServerTest();
-	        		break;
-	        		
-	        	// MIKE: added for API, this is the "clean up" command.
-	        	case "c":
-	        	
-	        		// TODO
-	        		// Clean up all NetControllers and state -- create a fresh
-	        		// slate.
-	        	
-	        		break;
-	        	
-	        		
-	        	// MIKE: added default so it fails.
-	        	default:
-	        		
-	        		System.out.println("Unrecognized command. Terminating.");
-	        		System.exit(-1);
-	        		
-	        		break;
-            
-      		} // End switch.
-      
-		} // End while has next line of input.
-    
+        	case "script":
+    			String filename = inputLine[1];
+    			runScript(filename);
+    			break;
+        		
+        	// MIKE: added default so it fails.
+        	default:
+        		
+        		System.out.println("Unrecognized command. Terminating.");
+        		System.exit(-1);
+        		
+        		break;
+        
+  		} // End switch.    
 	} // End main.
+	
+	
   
 	
 	private static void joinServer(int serverId)
@@ -540,6 +560,30 @@ public class Master
         	System.out.println("Invalid clientId!");
         	System.exit(-1);;
         }
+	}
+	
+	private static void runScript(String filename)
+	{
+		try (BufferedReader br = new BufferedReader(new FileReader("PaxosHandoutLite/tests/" + filename))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				if (line.startsWith("/")) {
+					continue;
+				}
+				
+				if (line.equals(""))
+				{
+					continue;
+				}
+
+				String[] inputLine = line.split(" ");
+				
+				execute(inputLine);
+			}
+		} catch (Exception exc) {
+			System.out.println("Error while running script.");
+			exc.printStackTrace();
+		}
 	}
   
 }
