@@ -21,7 +21,7 @@ import socketFramework.NetController;
 public class Client implements Runnable {
 	
 	// The server I talk to for requests.
-	private volatile int myServerId;
+	private volatile int serverId;
 	
 	// A queue the Master can issue this client commands on.
 	LinkedList<Message> clientReceiveQueue;
@@ -40,15 +40,11 @@ public class Client implements Runnable {
 	// Used for session guarantees.
 	private VersionVector W;
 	
-	// Net Controller ID of the server this client is currently 
-	// communicating with.
-	private int currentServer;
-	
 	public Client(int myClientId, int myServerId, NetController network)
 	{
 		this.clientReceiveQueue = new LinkedList<Message>();
 		
-		this.myServerId = myServerId;
+		this.serverId = myServerId;
 		this.myClientId = myClientId;
 		
 		this.R = new VersionVector();
@@ -87,7 +83,7 @@ public class Client implements Runnable {
 					wr.setW(this.W);
 					
 					// Dispatch request to server.
-					this.network.sendMessageToProcess(currentServer, wr);
+					this.network.sendMessageToProcess(this.serverId, wr);
 				}
 				
 				if (m instanceof ReadRequest)
@@ -101,7 +97,7 @@ public class Client implements Runnable {
 					rr.setW(this.W);
 					
 					// Dispatch request to server.
-					this.network.sendMessageToProcess(currentServer, rr);
+					this.network.sendMessageToProcess(this.serverId, rr);
 				}
 			}
 			
