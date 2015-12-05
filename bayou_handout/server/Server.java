@@ -298,8 +298,10 @@ public class Server implements Runnable {
 					// Log Write
 					write((Retire)m);
 					
-					// Remove from version vector
-					this.V.remove(((Retire)m).ID);
+					// Decided not to remove retired servers from the Version Vector.
+					// This is only an optimization, and one that apparently comes at
+					// the cost of buggy session guarantees.
+					//this.V.remove(((Retire)m).ID);
 				}
 			}
 		}
