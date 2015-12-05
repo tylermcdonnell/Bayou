@@ -1,8 +1,0 @@
-3_2:
-
-Tests retirement of primary server. Ensures that new primary is elected
-and begins stabilizing commands.
-
-3_3:
-
-Tests RYW session guarantee. Should print "foo:ERR_DEP"
