@@ -285,7 +285,7 @@ public class Server implements Runnable {
 					}
 				}
 				
-				if (m instanceof Put || m instanceof Delete)
+				if (m instanceof Write)
 				{
 					this.DB.add((Write)m);
 				}
