@@ -39,7 +39,7 @@ import message.Message;
 public class NetController {
 	
 	// A list of the NetController IDs for servers that are alive.
-	private ArrayList<Integer> aliveServerNetControllerIDs = new ArrayList<Integer>();
+	private volatile ArrayList<Integer> aliveServerNetControllerIDs = new ArrayList<Integer>();
 	
 	// MIKE: For each net controller that this net controller can talk to,
 	// the value true at the index corresponding to the ID of this array
@@ -110,14 +110,20 @@ public class NetController {
 	}
 	*/
 	
-	public void addToAliveServers(int serverId)
+	public synchronized void setAlive(ArrayList<Integer> alive)
 	{
-		this.aliveServerNetControllerIDs.add(serverId);
+		synchronized(this.aliveServerNetControllerIDs)
+		{
+			this.aliveServerNetControllerIDs = new ArrayList<Integer>(alive);
+		}
 	}
 	
 	public ArrayList<Integer> getAliveServers()
 	{
-		return this.aliveServerNetControllerIDs;
+		synchronized(this.aliveServerNetControllerIDs)
+		{
+			return new ArrayList<Integer>(this.aliveServerNetControllerIDs);
+		}
 	}
 	
 	/**
@@ -170,7 +176,7 @@ public class NetController {
 		// MIKE: added for breaking connections (Bayou).
 		if (!this.canTalkTo[process])
 		{
-			System.out.println("NC " + this.ID + " tried to send to " + process + " -- BROKEN CONNECTION.");
+			//System.out.println("NC " + this.ID + " tried to send to " + process + " -- BROKEN CONNECTION.");
 			return false;
 		}
 		
@@ -232,6 +238,7 @@ public class NetController {
 	{
 		try 
 		{
+			//System.out.println(this.ID + " sending message to " + process + ": " + m.toString());
 			Map.Entry<Integer, Message> toSend = new AbstractMap.SimpleEntry<Integer, Message>(this.ID, m);
 			return sendMsg(process, toString((Serializable)toSend));
 		}

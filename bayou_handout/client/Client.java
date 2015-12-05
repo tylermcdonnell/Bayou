@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import message.GetResponse;
 import message.Message;
@@ -40,6 +41,8 @@ public class Client implements Runnable {
 	// Used for session guarantees.
 	private VersionVector W;
 	
+	private volatile AtomicBoolean busy;
+	
 	public Client(int myClientId, int myServerId, NetController network)
 	{
 		this.clientReceiveQueue = new LinkedList<Message>();
@@ -49,6 +52,8 @@ public class Client implements Runnable {
 		
 		this.R = new VersionVector();
 		this.W = new VersionVector();
+		
+		this.busy = new AtomicBoolean(false);
 		
 		this.network = network;
 	}
@@ -77,7 +82,7 @@ public class Client implements Runnable {
 				{
 					WriteRequest wr = (WriteRequest)m;
 					
-					System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+					//System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
 					
 					// Session guarantees.
 					wr.setR(this.R);
@@ -91,7 +96,7 @@ public class Client implements Runnable {
 				{
 					ReadRequest rr = (ReadRequest)m;
 					
-					System.out.println("Client " + this.myClientId + " received from master: " + rr.toString());
+					//System.out.println("Client " + this.myClientId + " received from master: " + rr.toString());
 					
 					// Session guarantees.
 					rr.setR(this.R);
@@ -122,7 +127,12 @@ public class Client implements Runnable {
 					
 					System.out.println(r.toString());
 					
-					// TODO: Signal complete to Master.
+					// Signal complete to Master.
+					synchronized(this.busy)
+					{
+						this.busy.set(false);;
+						this.busy.notifyAll();
+					}
 				}
 				
 				if (m instanceof WriteResponse)
@@ -135,7 +145,12 @@ public class Client implements Runnable {
 						this.W = r.V;
 					}
 					
-					// TODO: Signal complete to Master.
+					// Signal complete to Master.
+					synchronized(this.busy)
+					{
+						this.busy.set(false);;
+						this.busy.notifyAll();
+					}
 				}
 			}
 			
@@ -150,9 +165,28 @@ public class Client implements Runnable {
 	 */
 	public synchronized void giveClientCommand(Message m)
 	{
+		synchronized (this.busy)
+		{
+			this.busy.set(true);
+		}
 		synchronized(this.clientReceiveQueue)
 		{
 			this.clientReceiveQueue.add(m);
+		}
+		
+		synchronized(this.busy)
+		{
+			try
+			{
+				if (this.busy.get() == true)
+				{
+					this.busy.wait();
+				}
+			} 
+			catch (InterruptedException exc)
+			{
+				// Nothing.
+			}
 		}
 	}
 	

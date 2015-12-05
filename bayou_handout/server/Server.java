@@ -58,13 +58,15 @@ public class Server implements Runnable {
 	private long nextAE;
 	
 	// Period between anti-entropy exchanges in MS.
-	public static final int ANTI_ENTROPY_PERIOD = 400;
+	public static final int ANTI_ENTROPY_PERIOD = 200;
 	
 	// Random number generator.
 	private Random random;
 	
 	// Used for test-case simulation. Pauses all anti-entropy messages. 
 	private volatile AtomicBoolean paused;
+	
+	private volatile AtomicBoolean busy;
 
 	
 	/**
@@ -87,21 +89,24 @@ public class Server implements Runnable {
 		this.ID			= null;
 		this.V 			= new VersionVector();
 		this.CSN 		= 0;
-		this.logical	= 0;
+		this.logical	= 1;
 		this.DB 		= new WriteLog();
 		this.playlist 	= new Playlist(this.DB);
 		this.network	= network;
-		this.nextAE		= Long.MAX_VALUE;
+		this.nextAE		= System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 		this.random 	= new Random();
 		this.paused		= new AtomicBoolean(false);
+		this.busy 		= new AtomicBoolean(false);
 		
 		if (isInitialPrimary)
 		{
 			this.ID = new ServerID();
+			this.V.add(this.ID);
 			this.isPrimary = true;
 		}
 		else 
 		{
+			this.busy.set(true);
 			this.isPrimary = false;
 			this.network.sendMessageToProcess(joinThrough, new Join());
 		}
@@ -140,6 +145,24 @@ public class Server implements Runnable {
 		}
 	}
 	
+	public synchronized void waitUntilJoined()
+	{
+		synchronized(this.busy)
+		{
+			try
+			{
+				if (this.busy.get() == true)
+				{
+					this.busy.wait();
+				}
+			} 
+			catch (InterruptedException exc)
+			{
+				// Nothing.
+			}
+		}
+	}
+	
 	@Override
 	public void run()
 	{
@@ -161,12 +184,13 @@ public class Server implements Runnable {
 			    }
 			}
 			
+			
 			// Check if it's time to initiate a new anti-entropy exchange. For now,
 			// this does not use any type of state machine to guide anti-entropy 
 			// exchanges. In other words, one begins every 100 milliseconds, regardless
 			// of whether one is already in progress or failed. This can certainly be
 			// problematic if the period is so low that the messages flood the system.
-			if (System.currentTimeMillis() >= this.nextAE)
+			if (System.currentTimeMillis() >= this.nextAE && this.ID != null)
 			{
 				this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 				
@@ -178,6 +202,7 @@ public class Server implements Runnable {
 					do
 					{
 						target = servers.get(random.nextInt(servers.size()));
+						//System.out.println(this.network.getID() + " selected " + target);
 					}
 					while (target == this.network.getID());
 					
@@ -193,6 +218,8 @@ public class Server implements Runnable {
 				int s 		= e.getKey();
 				Message m 	= e.getValue();
 				
+				//System.out.println(this.network.getID() + " received message from process " + s + ": " + m.toString());
+				
 				//******************************************************************
 				//* SERVER ID ASSIGNMENT - Do NOTHING until we are assigned an ID.
 				//******************************************************************
@@ -200,6 +227,13 @@ public class Server implements Runnable {
 				{
 					this.ID = ((JoinResponse)m).ID;
 					this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
+					
+					// Signal complete to Master.
+					synchronized(this.busy)
+					{
+						this.busy.set(false);;
+						this.busy.notifyAll();
+					}
 				}
 				if (this.ID == null)
 				{
@@ -304,17 +338,35 @@ public class Server implements Runnable {
 				//******************************************************************
 				//* ANTI-ENTROPY STATE EXCHANGE
 				//******************************************************************
-				// TODO: Anti-Entropy initiate message.
 				
 				if (m instanceof Write)
 				{
-					this.DB.add((Write)m);
+					//System.out.println("Process " + this.network.getID() + " received message from " + s + ": " + m.toString());
+					Write w = (Write)m;
+					write(w);
+					
+					// Update CSN.
+					if (w.CSN() != Integer.MAX_VALUE)
+					{
+						this.CSN = Math.max(this.CSN, w.CSN());
+					}
+					
+					// Update Logical clock.
+					this.logical = Math.max(this.logical, w.stamp() + 1);
+					
+					// Update Vector
+					this.V.update(w.server(), w.stamp());
+				}
+				
+				if (m instanceof Commit)
+				{
+					Commit c = (Commit)m;
+					this.DB.commit(c.server, c.stamp, c.CSN);
 				}
 				
 				if (m instanceof StartAntiEntropy)
 				{
-					StartAntiEntropy SAE = (StartAntiEntropy)m;
-					AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
+					AcceptAntiEntropy r = new AcceptAntiEntropy(this.ID, this.V, this.CSN);
 					this.network.sendMessageToProcess(s, r);
 				}
 				
@@ -353,6 +405,16 @@ public class Server implements Runnable {
 		return w;
 	}
 	
+	private void write(Write w)
+	{
+		if (w.action() instanceof Join)
+		{
+			this.V.add(new ServerID(w.server(), w.stamp()));
+		}
+		
+		this.DB.add(w);
+	}
+	
 	/**
 	 * Processes a get request.
 	 * @param g
@@ -377,7 +439,7 @@ public class Server implements Runnable {
 	{
 		if (this.isPrimary)
 		{
-			return this.CSN++;
+			return ++this.CSN;
 		}
 		else
 		{
@@ -397,16 +459,18 @@ public class Server implements Runnable {
 	
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
 	{
-		System.out.println(String.format("Starting <%d> <%d>", this.CSN, RCSN));
+		//System.out.println("AE between " + this.network.getID() + " and " + serverId);
+		
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
 		{
 			for (Write w : this.DB.getCommittedWrites())
 			{
-				if (w.stamp() <= RV.getAcceptStamp(w.server()))
+				if (w.stamp() <= RV.getAcceptStamp(w.server()) && w.CSN() > RCSN)
 				{
 					// R has the write, but does not know it is committed.
 					Commit c = new Commit(w.server(), w.stamp(), w.CSN());
+					this.network.sendMessageToProcess(serverId, w);
 					this.network.sendMessageToProcess(serverId, c);
 				}
 				else
@@ -419,7 +483,7 @@ public class Server implements Runnable {
 		
 		// Propagate tentative writes.
 		for (Write w : this.DB.getTentativeWrites())
-		{
+		{ 
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
 				this.network.sendMessageToProcess(serverId, w);

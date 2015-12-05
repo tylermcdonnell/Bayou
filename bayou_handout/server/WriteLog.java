@@ -131,6 +131,14 @@ public class WriteLog {
 		}
 	}
 	
+	public void printAll()
+	{
+		for (Write w : getWrites())
+		{
+			System.out.println(w.toString());
+		}
+	}
+	
 	public static boolean test()
 	{
 		WriteLog log = new WriteLog();

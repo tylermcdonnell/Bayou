@@ -6,11 +6,11 @@ public class Commit extends Message
 {
 	private static final long serialVersionUID = 1L;
 	
-	private ServerID server;
+	public ServerID server;
 	
-	private int stamp;
+	public int stamp;
 	
-	private int CSN;
+	public int CSN;
 	
 	public Commit(ServerID server, int stamp, int CSN)
 	{

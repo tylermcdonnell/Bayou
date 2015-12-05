@@ -70,9 +70,15 @@ public class VersionVector implements Serializable {
 	{
 		for (ServerID ID : this.vector.keySet())
 		{
-			int thatValue = V.get(ID);
-			
-			V.update(ID, Math.max(this.vector.get(ID), thatValue));
+			try
+			{
+				int thatValue = V.get(ID);
+				V.update(ID, Math.max(this.vector.get(ID), thatValue));
+			}
+			catch (NullPointerException exc)
+			{
+				V.update(ID, this.vector.get(ID));
+			}
 		}
 	}
 	

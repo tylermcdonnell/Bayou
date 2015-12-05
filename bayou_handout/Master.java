@@ -178,7 +178,7 @@ public class Master
 	             */
 	        	try
 	        	{
-	        		Thread.sleep(2 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
+	        		Thread.sleep(5 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
 	        	}
 	        	catch (InterruptedException exc)
 	        	{
@@ -312,6 +312,7 @@ public class Master
 	
 	private static void joinServer(int serverId)
 	{
+		System.out.println("Adding " + serverId);
 		// Create a NetController for this server.
         NetController nc = createNetController(serverId, Master.MAX_NUM_NODES_IN_SYSTEM);
         
@@ -323,7 +324,7 @@ public class Master
         {
         	if (Master.netControllers.get(i) != null)
         	{
-        		Master.netControllers.get(i).addToAliveServers(serverId);
+        		Master.netControllers.get(i).setAlive(Master.aliveServerNetControllerIDs);
         	}
         }
         
@@ -362,6 +363,8 @@ public class Master
         // Create server thread.
         Thread newServerThread = new Thread(newServer);
         newServerThread.start();
+        
+        newServer.waitUntilJoined();
 	}
 	
 	
