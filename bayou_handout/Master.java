@@ -579,7 +579,7 @@ public class Master
 	
 	private static void runScript(String filename)
 	{
-		try (BufferedReader br = new BufferedReader(new FileReader("PaxosHandoutLite/tests/" + filename))) {
+		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout/tests/" + filename))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("/")) {
