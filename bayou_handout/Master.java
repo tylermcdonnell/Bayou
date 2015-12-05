@@ -297,7 +297,7 @@ public class Master
         	
         		break;
         	
-        	case "script":
+        	case "s":
     			String filename = inputLine[1];
     			runScript(filename);
     			break;
