@@ -1,0 +1,30 @@
+// C2, C3 ---> S0
+// C4 ---> S1
+//
+// Server partitioned:
+// Partition 1: S0
+// Partition 2: S1
+// 
+// C2 puts (Mine, TaylorSwift.com), it only goes to S0.
+//
+// C3 gets (reads) (Mine, TaylorSwift.com) => now it is in the
+// read-set of C3.
+//
+// C3 joined to server 1.
+//
+// C3 tries to get Mine from S1, C3's read-set is not a subset
+// of S1's DB => MR violated.
+
+joinServer 0
+joinServer 1
+joinClient 2 0
+joinClient 3 0
+joinClient 4 1
+pause
+breakConnection 0 1
+start
+put 2 Mine TaylorSwift.com
+get 3 Mine
+joinClient 3 1
+stabilize
+get 3 Mine
