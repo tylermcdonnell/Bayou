@@ -9,12 +9,8 @@
 //
 // Partition fixed.
 //
-// Since S0 is primary, S1 should have 
-// (eyesOfTexas, cs.utexas.edu) ---> (eyesOfTexas, utexas.edu).
-//
-// They should both GET the same thing (eyesOfTexas, utexas.edu).
-//
-// Logs should be the same when printed.
+// Since S0 is primary, (eyesOfTexas, utexas.edu) is committed first.
+// When partition fixed, (eyesOfTexas, cs.utexas.edu) is committed second.
 
 joinServer 0
 joinServer 1
