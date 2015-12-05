@@ -95,6 +95,8 @@ public class Master
 	             * the server can tell another server of its retirement
 	             */
 	            
+	            Master.serverProcesses.get(serverId).retire();
+	            
 	            // TODO: remove this server's ID from the list of alive server IDs,
 	            // but ONLY ONCE the retired server has talked to one other server
 	            // (I think that's supposed to be blocking anyways, else the server
@@ -102,9 +104,11 @@ public class Master
 	            // to remove it from the list.
 	            
 	            // .... serverNetControllerIDs.remove(retiredServerId);
-	            // TODO: If we are retiring the primary, update the primary server Id
-	            // variable.
-	            // if (serverId == Master.primaryServerId) ...
+	            // If we are retiring the primary, update the primary server Id.
+	            if (serverId == Master.primaryServerId)
+	            {
+	            	Master.primaryServerId = serverId;
+	            }
 	            // Master.primaryServerId = ...
 	            break;
 	            
@@ -178,16 +182,19 @@ public class Master
 	             * time that this function blocks for should increase linearly with the 
 	             * number of servers in the system.
 	             */
+	        	long time = 5 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD;
+	        	// System.out.println("Waiting " + time);
 	        	try
 	        	{
-	        		Thread.sleep(5 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
+	        		Thread.sleep(time);
 	        	}
 	        	catch (InterruptedException exc)
 	        	{
 	        		// Shouldn't happen.
 	        	}
 	        	
-	        	System.out.println("Stabilize DONE");
+	        	
+	        	//System.out.println("Stabilize DONE");
 	
 	        	break;
         
@@ -200,6 +207,13 @@ public class Master
 	            Master.serverProcesses.get(serverId).printLog();
 	            
 	            break;
+	            
+	        case "printAll":
+	        	serverId = Integer.parseInt(inputLine[1]);
+	        	
+	        	Master.serverProcesses.get(serverId).printAll();
+	        	break;
+	        	
         
 	        case "put":
 	            clientId = Integer.parseInt(inputLine[1]);
@@ -315,7 +329,7 @@ public class Master
 	
 	private static void joinServer(int serverId)
 	{
-		System.out.println("Adding " + serverId);
+		//System.out.println("Adding " + serverId);
 		// Create a NetController for this server.
         NetController nc = createNetController(serverId, Master.MAX_NUM_NODES_IN_SYSTEM);
         

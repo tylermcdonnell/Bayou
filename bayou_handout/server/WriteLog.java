@@ -60,6 +60,7 @@ public class WriteLog {
 	 */
 	public void add(Write w)
 	{
+		//System.out.println("WRITE: " + w.toString());
 		if (!this.writes.contains(w))
 		{
 			this.writes.add(w);

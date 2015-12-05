@@ -66,7 +66,14 @@ public class Server implements Runnable {
 	// Used for test-case simulation. Pauses all anti-entropy messages. 
 	private volatile AtomicBoolean paused;
 	
+	// True if the server is currently performing a blocking command for Master.
 	private volatile AtomicBoolean busy;
+	
+	// True if the server is told to the retire.
+	private volatile AtomicBoolean retire;
+	
+	// True if the server is currently retiring.
+	private volatile AtomicBoolean retiring;
 
 	
 	/**
@@ -97,6 +104,8 @@ public class Server implements Runnable {
 		this.random 	= new Random();
 		this.paused		= new AtomicBoolean(false);
 		this.busy 		= new AtomicBoolean(false);
+		this.retire		= new AtomicBoolean(false);
+		this.retiring	= new AtomicBoolean(false);
 		
 		if (isInitialPrimary)
 		{
@@ -145,6 +154,38 @@ public class Server implements Runnable {
 		}
 	}
 	
+	public synchronized void printAll()
+	{
+		synchronized (this.DB)
+		{
+			this.DB.printAll();
+		}
+	}
+	
+	public synchronized void retire()
+	{
+		synchronized (this.retire)
+		{
+			this.retire.set(true);
+		}
+		
+		synchronized (this.retiring)
+		{
+			this.retiring.set(true);
+			try
+			{
+				if (this.retiring.get() == true)
+				{
+					this.retiring.wait();
+				}
+			} 
+			catch (InterruptedException exc)
+			{
+				// Nothing.
+			}
+		}
+	}
+	
 	public synchronized void waitUntilJoined()
 	{
 		synchronized(this.busy)
@@ -184,6 +225,15 @@ public class Server implements Runnable {
 			    }
 			}
 			
+			// Initiate retirement by writing to log.
+			synchronized(retire)
+			{
+				if (this.retire.get() == true)
+				{
+					write(new Retire(this.ID));
+					this.retire.set(false);
+				}
+			}		
 			
 			// Check if it's time to initiate a new anti-entropy exchange. For now,
 			// this does not use any type of state machine to guide anti-entropy 
@@ -226,6 +276,7 @@ public class Server implements Runnable {
 				if (m instanceof JoinResponse)
 				{
 					this.ID = ((JoinResponse)m).ID;
+					this.V.add(this.ID);
 					this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 					
 					// Signal complete to Master.
@@ -308,6 +359,15 @@ public class Server implements Runnable {
 					
 					if (m instanceof Get)
 					{
+						/* Debugging
+						System.out.println("---V---");
+						this.V.print();
+						System.out.println("---R---");
+						rr.R().print();
+						System.out.println("---W---");
+						rr.W().print();
+						*/
+						
 						// Writes Follow Reads and Monotonic Writes guarantees.
 						if (this.V.dominates(rr.R()) && this.V.dominates(rr.W()))
 						{
@@ -402,6 +462,7 @@ public class Server implements Runnable {
 	{
 		Write w = new Write(this.ID, this.assignCSN(), this.stamp(), wr);
 		this.DB.add(w);
+		this.V.update(this.ID, this.stamp());
 		return w;
 	}
 	
@@ -487,6 +548,20 @@ public class Server implements Runnable {
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
 				this.network.sendMessageToProcess(serverId, w);
+			}
+		}
+		
+		// If we are retiring and we have made it to this point, that means that
+		// we can communicate with the given server and our retirement has been
+		// propagated. :) 
+		synchronized (this.retiring)
+		{
+			if (this.retiring.get() == true)
+			{
+				// If we are the primary, elect the target leader.
+				this.network.sendMessageToProcess(serverId, new ElectPrimary());
+				this.retiring.set(false);
+				this.retiring.notifyAll();
 			}
 		}
 	}
