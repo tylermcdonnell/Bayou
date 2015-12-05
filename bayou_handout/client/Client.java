@@ -20,10 +20,10 @@ import socketFramework.NetController;
 public class Client implements Runnable {
 	
 	// The server I talk to for requests.
-	private int myServerId;
+	private volatile int myServerId;
 	
 	// A queue the Master can issue this client commands on.
-	LinkedList<WriteRequest> clientReceiveQueue;
+	LinkedList<Message> clientReceiveQueue;
 	
 	// This client's ID.
 	private int myClientId;
@@ -45,12 +45,15 @@ public class Client implements Runnable {
 	
 	public Client(int myClientId, int myServerId, NetController network)
 	{
-		this.clientReceiveQueue = new LinkedList<WriteRequest>();
+		this.clientReceiveQueue = new LinkedList<Message>();
+		
 		this.myServerId = myServerId;
 		this.myClientId = myClientId;
 		
 		this.R = new VersionVector();
 		this.W = new VersionVector();
+		
+		this.network = network;
 	}
 	
 	
@@ -125,20 +128,14 @@ public class Client implements Runnable {
 	/**
 	 * Send a client a command to fulfill.  The master class can use this.
 	 * 
-	 * @param object, the Object describing this command.
+	 * @param m
+	 * 		The command for the client.
 	 */
-	public synchronized void giveClientCommand(Object object)
+	public synchronized void giveClientCommand(Message m)
 	{
-		WriteRequest writeRequest = null;
-		
-		if (object instanceof WriteRequest)
-		{
-			writeRequest = (WriteRequest)object;
-		}
-		
 		synchronized(this.clientReceiveQueue)
 		{
-			this.clientReceiveQueue.add(writeRequest);
+			this.clientReceiveQueue.add(m);
 		}
 	}
 	
