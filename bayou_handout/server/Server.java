@@ -96,7 +96,7 @@ public class Server implements Runnable {
 		this.ID			= null;
 		this.V 			= new VersionVector();
 		this.CSN 		= 0;
-		this.logical	= 1;
+		this.logical	= 0;
 		this.DB 		= new WriteLog();
 		this.playlist 	= new Playlist(this.DB);
 		this.network	= network;
@@ -361,7 +361,9 @@ public class Server implements Runnable {
 					
 					if (m instanceof Get)
 					{
-						/* Debugging
+						// Debugging
+						//System.out.println("server " + this.network.getID());
+						/*
 						System.out.println("---V---");
 						this.V.print();
 						System.out.println("---R---");
@@ -442,9 +444,11 @@ public class Server implements Runnable {
 				{
 					this.isPrimary = true;
 					
+					//System.out.println("Process " + this.network.getID() + " elected primary.");
 					// Stabilize all local writes by assigning CSNs.
 					for (Write w : this.DB.getTentativeWrites())
 					{
+						//System.out.println("Stabilizing write..." + w.toString());
 						w.setCSN(this.assignCSN());
 					}
 				}
@@ -464,7 +468,10 @@ public class Server implements Runnable {
 	{
 		Write w = new Write(this.ID, this.assignCSN(), this.stamp(), wr);
 		this.DB.add(w);
-		this.V.update(this.ID, this.stamp());
+		
+		this.V.update(this.ID, this.logical);
+		//System.out.println("Updated vector of process " + this.network.getID());
+		//this.V.print();
 		return w;
 	}
 	
@@ -473,6 +480,11 @@ public class Server implements Runnable {
 		if (w.action() instanceof Join)
 		{
 			this.V.add(new ServerID(w.server(), w.stamp()));
+		}
+		
+		if (this.isPrimary && w.CSN() == Integer.MAX_VALUE)
+		{
+			w.setCSN(this.assignCSN());
 		}
 		
 		this.DB.add(w);
@@ -517,7 +529,7 @@ public class Server implements Runnable {
 	 */
 	private int stamp()
 	{
-		return this.logical++;
+		return ++this.logical;
 	}
 	
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
@@ -564,6 +576,7 @@ public class Server implements Runnable {
 				this.network.sendMessageToProcess(serverId, new ElectPrimary());
 				this.retiring.set(false);
 				this.retiring.notifyAll();
+				Thread.currentThread().stop();
 			}
 		}
 	}

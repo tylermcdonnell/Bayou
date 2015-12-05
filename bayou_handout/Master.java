@@ -187,7 +187,7 @@ public class Master
 	             * time that this function blocks for should increase linearly with the 
 	             * number of servers in the system.
 	             */
-	        	long time = 5 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD;
+	        	long time = 10 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD;
 	        	// System.out.println("Waiting " + time);
 	        	try
 	        	{
