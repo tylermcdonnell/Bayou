@@ -106,8 +106,6 @@ public class Master
 	            // to remove it from the list.
 	            
 	            // .... serverNetControllerIDs.remove(retiredServerId);
-	            
-<<<<<<< HEAD
 	            // TODO: If we are retiring the primary, update the primary server Id
 	            // variable.
 	            // if (serverId == Master.primaryServerId) ...
@@ -142,7 +140,6 @@ public class Master
 		
 	        	id1 = Integer.parseInt(inputLine[1]);
 	        	id2 = Integer.parseInt(inputLine[2]);
-=======
 		        	/*
 		        	 * Restore the connection between a client and a server or between
 		        	 * two servers
@@ -150,101 +147,18 @@ public class Master
 		        	restoreConnection(id1, id2);
 		        	break;
             
-		        case "pause":
-		        	/*
-		        	 * Pause the system and don't allow any Anti-Entropy messages to
-		        	 * propagate through the system
-		        	 */
-		        	for (Server s : Master.serverProcesses)
-		        	{
-		        		if (s != null)
-		        		{
-		        			s.pause();
-		        		}
-		        	}	
-		        	break;
-            
-		        case "start":
-		        	/*
-		        	 * Resume the system and allow any Anti-Entropy messages to
-		        	 * propagate through the system
-		        	 */
-		        	for (Server s : Master.serverProcesses)
-		        	{
-		        		if (s != null)
-		        		{
-		        			s.start();
-		        		}
-		        	}
-		        	break;
-            
-		        case "stabilize":
-		        	/*
-		             * Block until there are enough Anti-Entropy messages for all values to 
-		             * propagate through the currently connected servers. In general, the 
-		             * time that this function blocks for should increase linearly with the 
-		             * number of servers in the system.
-		             */
-		        	try
-		        	{
-		        		Thread.sleep(2 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
-		        	}
-		        	catch (InterruptedException exc)
-		        	{
-		        		// Shouldn't happen.
-		        	}
-		
-		        	break;
-            
-		        case "printLog":
-		            serverId = Integer.parseInt(inputLine[1]);
-		            /*
-		             * Print out a server's operation log in the format specified in the
-		             * hand out.
-		             */
-		            Master.serverProcesses.get(serverId).printLog();
-		            
-		            break;
-            
-		        case "put":
-		            clientId = Integer.parseInt(inputLine[1]);
-		            songName = inputLine[2];
-		            URL = inputLine[3];
-		            
-		            /*
-		             * Instruct the client specified to associate the given URL with the given
-		             * songName. This command should block until the client communicates with
-		             * one server.
-		             */
-		            validateClientId(clientId);
-		            Put putRequest = new Put(songName, URL);
-		            Master.clientProcesses.get(clientId).giveClientCommand(putRequest);
-		            
-		            // TODO
-		            // Block until client communicates with one server.
-		            //boolean blocked = true;
-		            //while (blocked)
-		            //{
-		            	// Keep querying client.
-		            //}
-		            
-		            break;
->>>>>>> 56cc755fd1cdcfedee3e990251f77f80b848388c
-            
-	        	/*
-	        	 * Restore the connection between a client and a server or between
-	        	 * two servers
-	        	 */
-	        	restoreConnection(id1, id2);
-	        	break;
-        
 	        case "pause":
 	        	/*
 	        	 * Pause the system and don't allow any Anti-Entropy messages to
 	        	 * propagate through the system
 	        	 */
-    	
-    	
+	        	for (Server s : Master.serverProcesses)
+	        	{
+	        		if (s != null)
+	        		{
+	        			s.pause();
+	        		}
+	        	}	
 	        	break;
         
 	        case "start":
@@ -252,8 +166,13 @@ public class Master
 	        	 * Resume the system and allow any Anti-Entropy messages to
 	        	 * propagate through the system
 	        	 */
-    	
-    	
+	        	for (Server s : Master.serverProcesses)
+	        	{
+	        		if (s != null)
+	        		{
+	        			s.start();
+	        		}
+	        	}
 	        	break;
         
 	        case "stabilize":
@@ -263,7 +182,14 @@ public class Master
 	             * time that this function blocks for should increase linearly with the 
 	             * number of servers in the system.
 	             */
-	
+	        	try
+	        	{
+	        		Thread.sleep(2 * Master.aliveServerNetControllerIDs.size() * Server.ANTI_ENTROPY_PERIOD);
+	        	}
+	        	catch (InterruptedException exc)
+	        	{
+	        		// Shouldn't happen.
+	        	}
 	
 	        	break;
         
@@ -273,7 +199,7 @@ public class Master
 	             * Print out a server's operation log in the format specified in the
 	             * hand out.
 	             */
-	            
+	            Master.serverProcesses.get(serverId).printLog();
 	            
 	            break;
         

@@ -94,7 +94,7 @@ public class Client implements Runnable {
 				{
 					ReadRequest rr = (ReadRequest)m;
 					
-					System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+					System.out.println("Client " + this.myClientId + " received from master: " + rr.toString());
 					
 					// Session guarantees.
 					rr.setR(this.R);
