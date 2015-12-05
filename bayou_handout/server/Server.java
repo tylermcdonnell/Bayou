@@ -318,6 +318,12 @@ public class Server implements Runnable {
 					this.network.sendMessageToProcess(s, r);
 				}
 				
+				if (m instanceof AcceptAntiEntropy)
+				{
+					AcceptAntiEntropy AAE = (AcceptAntiEntropy)m;
+					antiEntropy(s, AAE.V, AAE.CSN);
+				}
+				
 				if (m instanceof ElectPrimary)
 				{
 					this.isPrimary = true;
@@ -391,6 +397,7 @@ public class Server implements Runnable {
 	
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
 	{
+		System.out.println(String.format("Starting <%d> <%d>", this.CSN, RCSN));
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
 		{
