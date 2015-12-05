@@ -57,7 +57,8 @@ public class Client implements Runnable {
 	@Override
 	public void run()
 	{
-		System.out.println("Client " + this.myClientId + " is up!");
+		// Testing.
+		//System.out.println("Client " + this.myClientId + " is up!");
 		
 		while (true)
 		{

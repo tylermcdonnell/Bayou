@@ -77,7 +77,7 @@ public class Master
 		int clientId, serverId, id1, id2;
 		String songName, URL;
   
-		System.out.println(inputLine[0]);
+		System.out.println("Master Command: " + inputLine[0]);
 		
 		switch (inputLine[0])
 		{
@@ -190,6 +190,8 @@ public class Master
 	        	{
 	        		// Shouldn't happen.
 	        	}
+	        	
+	        	System.out.println("Stabilize DONE");
 	
 	        	break;
         
@@ -295,7 +297,7 @@ public class Master
         	
         		break;
         	
-        	case "script":
+        	case "s":
     			String filename = inputLine[1];
     			runScript(filename);
     			break;
@@ -579,7 +581,7 @@ public class Master
 	
 	private static void runScript(String filename)
 	{
-		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout/tests/" + filename))) {
+		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout/tests/" + filename + ".test"))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("/")) {
