@@ -14,3 +14,4 @@ joinClient 3 1
 put 2 eyesOfTexas utexas.edu
 stabilize
 get 3 eyesOfTexas
+clean

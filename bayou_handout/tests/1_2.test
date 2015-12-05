@@ -26,3 +26,4 @@ put 5 b 456
 stabilize
 get 4 b
 get 5 a
+clean
