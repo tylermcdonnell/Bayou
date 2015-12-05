@@ -179,7 +179,7 @@ public class Server implements Runnable {
 					{
 						target = servers.get(random.nextInt(servers.size()));
 					}
-					while (target != this.network.getID());
+					while (target == this.network.getID());
 					this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
 				}
 			}
