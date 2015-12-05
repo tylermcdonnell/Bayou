@@ -87,6 +87,6 @@ additional commands:
 s [name of test in tests/ directory, without ".test" in file name]
   See the "To Run" section for precise instructions.
   
-printAll
-  Prints the Logs for each server.
+clean
+  See the "To Clean" section.
   
