@@ -1,3 +1,15 @@
+//         S1, S2
+// C4 ---> S0
+// C5 ---> S3 
+//
+// Create server topology:
+// S0 <---> S1 <---> S2 <---> S3
+//
+// (a, 123) and (b, 456) should propagate to all servers.
+// Stabilize should let this happen.
+// C4 and C5 perform GETs to see that "a" propagated from S0 to S3.
+// and "b" propagated from S3 to S0.
+
 joinServer 0
 joinServer 1
 joinServer 2

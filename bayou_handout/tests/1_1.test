@@ -3,7 +3,7 @@
 // C2 ---> S0
 // C3 ---> S1
 //
-// (eyesOfTexas, utexas.edu) should propagate to all servers.
+// (eyesOfTexas, utexas.edu) should propagate to all servers. 
 // Stabilize should let this happen.
 // Get will show that C3 got the write.
 
