@@ -23,22 +23,30 @@ public class VersionVector implements Serializable {
 	}
 	
 	/**
-	 * Adds a server to the version vector and initializes timestamp to 0.
+	 * Adds a server to the version vector if it doesn't already exist
+	 * and initializes timestamp to 0. Otherwise, nothing.
 	 * @param s				Server ID
 	 */
 	public void add(ServerID s)
 	{
-		add(s, 0);
+		if (!this.vector.containsKey(s))
+		{
+			this.vector.put(s, 0);
+		}
 	}
 	
 	/**
-	 * Adds a server to the version vector and initializes timestamp.
+	 * Adds a server to the version vector if it doesn't already exist
+	 * and initializes timestamp. Otherwise, does nothing.
 	 * @param s				Server ID.
 	 * @param timestamp		Initial timestamp.
 	 */
 	public void add(ServerID s, int timestamp)
 	{
-		this.vector.put(s, 0);
+		if (!this.vector.containsKey(s))
+		{
+			this.vector.put(s, timestamp);
+		}
 	}
 	
 	/**
