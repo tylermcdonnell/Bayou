@@ -24,3 +24,4 @@ printLog 2
 printLog 3
 get 4 hello
 get 5 hello
+clean
