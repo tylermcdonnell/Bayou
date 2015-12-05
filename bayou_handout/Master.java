@@ -77,7 +77,7 @@ public class Master
 		int clientId, serverId, id1, id2;
 		String songName, URL;
   
-		System.out.println("Master Command: " + inputLine[0]);
+		//System.out.println("Master Command: " + inputLine[0]);
 		
 		switch (inputLine[0])
 		{

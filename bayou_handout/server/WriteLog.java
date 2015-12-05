@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import message.Delete;
+import message.Put;
 import message.Write;
 
 /**
@@ -116,11 +117,17 @@ public class WriteLog {
 	{
 		for (Write w : getCommittedWrites())
 		{
-			System.out.println(String.format("%s:TRUE", w.toString()));
+			if (w.action() instanceof Put || w.action() instanceof Delete)
+			{
+				System.out.println(String.format("%s:TRUE", w.action().toString()));	
+			}
 		}
 		for (Write w : getTentativeWrites())
 		{
-			System.out.println(String.format("%s:FALSE", w.toString()));
+			if (w.action() instanceof Put || w.action() instanceof Delete)
+			{
+				System.out.println(String.format("%s:FALSE", w.action().toString()));	
+			}
 		}
 	}
 	
