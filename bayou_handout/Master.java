@@ -594,7 +594,9 @@ public class Master
 	
 	private static void runScript(String filename)
 	{
-		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout/tests/" + filename + ".test"))) {
+		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout" + File.separator +
+																   "tests" + File.separator +
+																   filename + ".test"))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("/")) {
