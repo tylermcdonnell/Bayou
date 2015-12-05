@@ -335,6 +335,7 @@ public class Server implements Runnable {
 						
 						// Assign new Server ID to joining process.
 						ServerID newServerID = new ServerID(this.ID, w.stamp());
+						this.V.add(newServerID);
 						JoinResponse r = new JoinResponse(newServerID);
 						this.network.sendMessageToProcess(s, r);
 					}
@@ -535,7 +536,6 @@ public class Server implements Runnable {
 	public void antiEntropy(int serverId, VersionVector RV, int RCSN)
 	{
 		//System.out.println("AE between " + this.network.getID() + " and " + serverId);
-		
 		// Propagate committed writes.
 		if (RCSN < this.CSN)
 		{
@@ -559,6 +559,11 @@ public class Server implements Runnable {
 		// Propagate tentative writes.
 		for (Write w : this.DB.getTentativeWrites())
 		{ 
+			if (serverId == 0)
+			{
+				//RV.print();
+				//System.out.println("Checking " + w.toString() + "\n" + w.server() + " " + RV.getAcceptStamp(w.server()) + " " + w.stamp());
+			}
 			if (RV.getAcceptStamp(w.server()) < w.stamp())
 			{
 				this.network.sendMessageToProcess(serverId, w);
