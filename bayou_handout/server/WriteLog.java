@@ -2,7 +2,9 @@ package server;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import message.Delete;
 import message.Put;
@@ -68,12 +70,22 @@ public class WriteLog {
 		Collections.sort(this.writes);
 	}
 	
+	public void removeDuplicates()
+	{
+		Set<Write> hs = new HashSet<>();
+		hs.addAll(this.writes);
+		this.writes.clear();
+		this.writes.addAll(hs);
+		Collections.sort(this.writes);
+	}
+	
 	/**
 	 * @return		
 	 * 		A soft copy of ordered committed writes in this log.
 	 */
 	public List<Write> getCommittedWrites()
-	{
+	{		
+		removeDuplicates();
 		List<Write> committed = new ArrayList<Write>();
 		for(Write w : this.writes)
 		{
@@ -92,6 +104,7 @@ public class WriteLog {
 	 */
 	public List<Write> getTentativeWrites()
 	{
+		removeDuplicates();
 		List<Write> tentative = new ArrayList<Write>();
 		for(Write w : this.writes)
 		{
@@ -111,11 +124,13 @@ public class WriteLog {
 	 */
 	public List<Write> getWrites()
 	{
+		removeDuplicates();
 		return new ArrayList<Write>(this.writes);
 	}
 	
 	public void print()
 	{
+		removeDuplicates();
 		for (Write w : getCommittedWrites())
 		{
 			if (w.action() instanceof Put || w.action() instanceof Delete)
@@ -134,6 +149,7 @@ public class WriteLog {
 	
 	public void printAll()
 	{
+		removeDuplicates();
 		for (Write w : getWrites())
 		{
 			System.out.println(w.toString());
