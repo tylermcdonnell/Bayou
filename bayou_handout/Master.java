@@ -71,7 +71,7 @@ public class Master
 		int clientId, serverId, id1, id2;
 		String songName, URL;
   
-		//System.out.println("Master Command: " + inputLine[0]);
+		System.out.println("Master Command: " + inputLine[0]);
 		
 		//System.out.println(inputLine[0]);
 		
@@ -387,7 +387,8 @@ public class Master
 	
 	private static void joinClient(int clientId, int serverId)
 	{
-		if (Master.clientProcesses.size() < clientId ||
+		// MIKE: changed to <= from <.
+		if (Master.clientProcesses.size() <= clientId ||
 			Master.clientProcesses.get(clientId) == null)
 		{
 			// Create a NetController for this client.
