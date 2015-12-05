@@ -1,3 +1,24 @@
+//         S2
+// C3 ---> S0
+// C4 ---> S1
+//
+// Server partitioned:
+// Partition 1: S0
+// Partition 2: S1, S2: S1 <---> S2
+//
+// C4 puts (a, helloworld), this will propagate only from S1 to S2
+// (S0 will not get it since partition).
+//
+// Partition is fixed, S0 can talk to S1
+//
+// Stabilize should propagate (a, helloworld) to S0.
+//
+// C3 should properly get (a, helloworld).
+
+// TODO:
+// Idea: do this same test, but don't fix the partition before C3
+// gets a.
+
 joinServer 0
 joinServer 1
 joinServer 2
