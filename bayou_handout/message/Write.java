@@ -63,6 +63,15 @@ public class Write extends Message implements Comparable<Write> {
 		return this.action;
 	}
 	
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + (this.toString().hashCode());
+        return result;
+    }
+	
 	@Override
 	public String toString() 
 	{

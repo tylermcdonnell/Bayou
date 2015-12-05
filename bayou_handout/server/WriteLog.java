@@ -72,7 +72,7 @@ public class WriteLog {
 	
 	public void removeDuplicates()
 	{
-		Set<Write> hs = new HashSet<>();
+		Set<Write> hs = new HashSet<Write>();
 		hs.addAll(this.writes);
 		this.writes.clear();
 		this.writes.addAll(hs);
@@ -130,7 +130,6 @@ public class WriteLog {
 	
 	public void print()
 	{
-		removeDuplicates();
 		for (Write w : getCommittedWrites())
 		{
 			if (w.action() instanceof Put || w.action() instanceof Delete)
