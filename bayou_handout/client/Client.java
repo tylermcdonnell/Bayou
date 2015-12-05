@@ -7,6 +7,7 @@ import java.util.Map;
 
 import message.GetResponse;
 import message.Message;
+import message.ReadRequest;
 import message.WriteRequest;
 import message.WriteResponse;
 import server.VersionVector;
@@ -70,19 +71,38 @@ public class Client implements Runnable {
 			
 			// This will contain the messages received in this iteration
 			// from the master.
-			ArrayList<WriteRequest> masterMessages = getMasterWriteRequests();
+			ArrayList<Message> masterMessages = getMasterRequests();
 			
 			// Process messages from master.
-			for (WriteRequest wr : masterMessages)
+			for (Message m : masterMessages)
 			{
-				System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+				if (m instanceof WriteRequest)
+				{
+					WriteRequest wr = (WriteRequest)m;
+					
+					System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+					
+					// Session guarantees.
+					wr.setR(this.R);
+					wr.setW(this.W);
+					
+					// Dispatch request to server.
+					this.network.sendMessageToProcess(currentServer, wr);
+				}
 				
-				// Session guarantees.
-				wr.setR(this.R);
-				wr.setW(this.W);
-				
-				// Dispatch request to server.
-				this.network.sendMessageToProcess(currentServer, wr);
+				if (m instanceof ReadRequest)
+				{
+					ReadRequest rr = (ReadRequest)m;
+					
+					System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
+					
+					// Session guarantees.
+					rr.setR(this.R);
+					rr.setW(this.W);
+					
+					// Dispatch request to server.
+					this.network.sendMessageToProcess(currentServer, rr);
+				}
 			}
 			
 			//******************************************************************
@@ -147,23 +167,12 @@ public class Client implements Runnable {
 	 * @return write requests sent from the master at the time this method is
 	 * called.
 	 */
-	private ArrayList<WriteRequest> getMasterWriteRequests()
-	{
-		ArrayList<WriteRequest> writeRequestsFromMaster = new ArrayList<WriteRequest>();
-		
+	private ArrayList<Message> getMasterRequests()
+	{		
 		// Continuously listen for client commands from the master.
 		synchronized(this.clientReceiveQueue)
 		{	
-			for (Iterator<WriteRequest> i = this.clientReceiveQueue.iterator(); i.hasNext();)
-			{
-				WriteRequest msg = i.next();
-				i.remove();
-				
-				// Process this message outside of the iterator loop.
-				writeRequestsFromMaster.add(msg);
-			}
+			return new ArrayList<Message>(this.clientReceiveQueue);
 		}
-		
-		return writeRequestsFromMaster;
 	}
 }
