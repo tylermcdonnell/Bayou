@@ -345,11 +345,11 @@ public class Master
 	private static void joinClient(int clientId, int serverId)
 	{
 		// Create a NetController for this client.
-        createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
+		NetController nc = createNetController(clientId, MAX_NUM_NODES_IN_SYSTEM);
         
         // Pass in the server ID to this client, they can use that as
         // the argument to send() when they talk to their server.
-        Client newClient = new Client(clientId, serverId);
+        Client newClient = new Client(clientId, serverId, nc);
         
         // If the element at index clientId is not created yet.
      	int highestIndex = Master.clientProcesses.size() - 1;

@@ -43,7 +43,7 @@ public class Client implements Runnable {
 	// communicating with.
 	private int currentServer;
 	
-	public Client(int myClientId, int myServerId)
+	public Client(int myClientId, int myServerId, NetController network)
 	{
 		this.clientReceiveQueue = new LinkedList<WriteRequest>();
 		this.myServerId = myServerId;
