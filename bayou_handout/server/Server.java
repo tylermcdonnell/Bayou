@@ -180,6 +180,7 @@ public class Server implements Runnable {
 						target = servers.get(random.nextInt(servers.size()));
 					}
 					while (target == this.network.getID());
+					
 					this.network.sendMessageToProcess(target, new StartAntiEntropy(this.ID));
 				}
 			}
@@ -261,24 +262,6 @@ public class Server implements Runnable {
 						// the cost of buggy session guarantees.
 						//this.V.remove(((Retire)m).ID);
 					}
-					
-					if (m instanceof StartAntiEntropy)
-					{
-						StartAntiEntropy SAE = (StartAntiEntropy)m;
-						AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
-						this.network.sendMessageToProcess(s, r);
-					}
-					
-					if (m instanceof ElectPrimary)
-					{
-						this.isPrimary = true;
-						
-						// Stabilize all local writes by assigning CSNs.
-						for (Write w : this.DB.getTentativeWrites())
-						{
-							w.setCSN(this.assignCSN());
-						}
-					}
 				}
 				
 				if (m instanceof ReadRequest)
@@ -326,6 +309,24 @@ public class Server implements Runnable {
 				if (m instanceof Write)
 				{
 					this.DB.add((Write)m);
+				}
+				
+				if (m instanceof StartAntiEntropy)
+				{
+					StartAntiEntropy SAE = (StartAntiEntropy)m;
+					AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
+					this.network.sendMessageToProcess(s, r);
+				}
+				
+				if (m instanceof ElectPrimary)
+				{
+					this.isPrimary = true;
+					
+					// Stabilize all local writes by assigning CSNs.
+					for (Write w : this.DB.getTentativeWrites())
+					{
+						w.setCSN(this.assignCSN());
+					}
 				}
 			}
 		}
