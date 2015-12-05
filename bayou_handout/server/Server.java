@@ -205,59 +205,115 @@ public class Server implements Runnable {
 					continue;
 				}
 				
-				//******************************************************************
-				//* CLIENT REQUESTS
-				//******************************************************************
+
 				if (m instanceof WriteRequest)
 				{
 					WriteRequest wr = (WriteRequest)m;
 					
-					// Writes Follow Reads and Monotonic Writes guarantees.
-					if (this.V.dominates(wr.R()) && this.V.dominates(wr.W()))
+					//******************************************************************
+					//* CLIENT REQUESTS
+					//******************************************************************
+					
+					if (m instanceof Put || m instanceof Delete)
 					{
-						// Accept Write.
-						Write w = write((Put)m);
-						 
-						// Update return vector for future session guarantees.
-						VersionVector newVector = wr.W();
-						newVector.update(this.ID, w.stamp());
-						
-						// Respond to client.
-						this.network.sendMessageToProcess(s, new WriteResponse(true, newVector));
+						// Writes Follow Reads and Monotonic Writes guarantees.
+						if (this.V.dominates(wr.R()) && this.V.dominates(wr.W()))
+						{
+							// Accept Write.
+							Write w = write((Put)m);
+							 
+							// Update return vector for future session guarantees.
+							VersionVector newVector = wr.W();
+							newVector.update(this.ID, w.stamp());
+							
+							// Respond to client.
+							this.network.sendMessageToProcess(s, new WriteResponse(true, newVector));
+						}
+						else
+						{
+							// Drop Write.
+							this.network.sendMessageToProcess(s, new WriteResponse(false, wr.R()));
+						}
 					}
-					else
+	
+					//******************************************************************
+					//* SERVER REQUESTS
+					//******************************************************************
+					
+					if (m instanceof Join)
 					{
-						// Drop Write.
-						this.network.sendMessageToProcess(s, new WriteResponse(false, wr.R()));
+						// Log Write
+						Write w = write((Join)m);
+						
+						// Assign new Server ID to joining process.
+						ServerID newServerID = new ServerID(this.ID, w.stamp());
+						JoinResponse r = new JoinResponse(newServerID);
+						this.network.sendMessageToProcess(s, r);
+					}
+					
+					if (m instanceof Retire)
+					{
+						// Log Write
+						write((Retire)m);
+						
+						// Decided not to remove retired servers from the Version Vector.
+						// This is only an optimization, and one that apparently comes at
+						// the cost of buggy session guarantees.
+						//this.V.remove(((Retire)m).ID);
+					}
+					
+					if (m instanceof StartAntiEntropy)
+					{
+						StartAntiEntropy SAE = (StartAntiEntropy)m;
+						AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
+						this.network.sendMessageToProcess(s, r);
+					}
+					
+					if (m instanceof ElectPrimary)
+					{
+						this.isPrimary = true;
+						
+						// Stabilize all local writes by assigning CSNs.
+						for (Write w : this.DB.getTentativeWrites())
+						{
+							w.setCSN(this.assignCSN());
+						}
 					}
 				}
 				
 				if (m instanceof ReadRequest)
 				{
 					ReadRequest rr = (ReadRequest)m;
+				
+					//******************************************************************
+					//* CLIENT REQUESTS
+					//******************************************************************
 					
-					// Writes Follow Reads and Monotonic Writes guarantees.
-					if (this.V.dominates(rr.R()) && this.V.dominates(rr.W()))
+					if (m instanceof Get)
 					{
-						// Accept Read.
-						if (m instanceof Get)
+						// Writes Follow Reads and Monotonic Writes guarantees.
+						if (this.V.dominates(rr.R()) && this.V.dominates(rr.W()))
 						{
-							// Update return vector for future session guarantees.
-							VersionVector newVector = rr.R();
-							this.V.max(newVector);
-							
-							// Respond to client.
-							GetResponse r = get((Get)m);
-							r.V = newVector;
-							this.network.sendMessageToProcess(s, r);
+							// Accept Read.
+							if (m instanceof Get)
+							{
+								// Update return vector for future session guarantees.
+								VersionVector newVector = rr.R();
+								this.V.max(newVector);
+								
+								// Respond to client.
+								GetResponse r = get((Get)m);
+								r.V = newVector;
+								this.network.sendMessageToProcess(s, r);
+							}
 						}
-					}
-					else
-					{
-						// Report error for Read.
-						if (m instanceof Get)
+						else
 						{
-							this.network.sendMessageToProcess(s, new GetResponse(((Get)m).songName, "ERR_DEP", false));
+							// Report error for Read.
+							if (m instanceof Get)
+							{
+								this.network.sendMessageToProcess(s, new GetResponse(((Get)m).songName, "ERR_DEP", false));
+							}
 						}
 					}
 				}
@@ -267,49 +323,9 @@ public class Server implements Runnable {
 				//******************************************************************
 				// TODO: Anti-Entropy initiate message.
 				
-				if (m instanceof StartAntiEntropy)
-				{
-					StartAntiEntropy SAE = (StartAntiEntropy)m;
-					AcceptAntiEntropy r = new AcceptAntiEntropy(SAE.server, this.V, this.CSN);
-					this.network.sendMessageToProcess(s, r);
-				}
-				
-				if (m instanceof ElectPrimary)
-				{
-					this.isPrimary = true;
-					
-					// Stabilize all local writes by assigning CSNs.
-					for (Write w : this.DB.getTentativeWrites())
-					{
-						w.setCSN(this.assignCSN());
-					}
-				}
-				
 				if (m instanceof Write)
 				{
 					this.DB.add((Write)m);
-				}
-				
-				if (m instanceof Join)
-				{
-					// Log Write
-					Write w = write((Join)m);
-					
-					// Assign new Server ID to joining process.
-					ServerID newServerID = new ServerID(this.ID, w.stamp());
-					JoinResponse r = new JoinResponse(newServerID);
-					this.network.sendMessageToProcess(s, r);
-				}
-				
-				if (m instanceof Retire)
-				{
-					// Log Write
-					write((Retire)m);
-					
-					// Decided not to remove retired servers from the Version Vector.
-					// This is only an optimization, and one that apparently comes at
-					// the cost of buggy session guarantees.
-					//this.V.remove(((Retire)m).ID);
 				}
 			}
 		}
