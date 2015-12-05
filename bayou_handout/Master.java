@@ -594,9 +594,12 @@ public class Master
 	
 	private static void runScript(String filename)
 	{
-		try (BufferedReader br = new BufferedReader(new FileReader("bayou_handout" + File.separator +
-																   "tests" + File.separator +
-																   filename + ".test"))) {
+		try
+		{
+			BufferedReader br = new BufferedReader(new FileReader("bayou_handout" + File.separator +
+					   "tests" + File.separator +
+					   filename + ".test"));
+			
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("/")) {
@@ -612,7 +615,36 @@ public class Master
 				
 				execute(inputLine);
 			}
-		} catch (Exception exc) {
+			return;
+		}
+		catch (Exception exc)
+		{
+
+		}
+		
+		try
+		{
+			BufferedReader br = new BufferedReader(new FileReader("tests" + File.separator +
+		                filename + ".test"));
+			
+			String line;
+			while ((line = br.readLine()) != null) {
+				if (line.startsWith("/")) {
+					continue;
+				}
+				
+				if (line.equals(""))
+				{
+					continue;
+				}
+
+				String[] inputLine = line.split(" ");
+				
+				execute(inputLine);
+			}
+		}
+		catch (Exception exc)
+		{
 			System.out.println("Error while running script.");
 			exc.printStackTrace();
 		}
