@@ -1,5 +1,6 @@
 package server;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -9,8 +10,10 @@ import java.util.List;
  * @author tyler
  *
  */
-public class VersionVector {
+public class VersionVector implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	private Hashtable<ServerID, Integer> vector;
 	
 	public VersionVector()

@@ -238,8 +238,7 @@ public class NetController {
 		}
 		catch (Exception exc)
 		{
-			System.out.println(exc.getMessage());
-			System.out.println("ERROR: IOException while sending message.");
+			exc.printStackTrace();
 			return false;
 		}
 	}
