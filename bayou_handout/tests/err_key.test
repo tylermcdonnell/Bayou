@@ -15,6 +15,10 @@
 //
 // C3 should properly get (a, helloworld).
 
+// TODO:
+// Idea: do this same test, but don't fix the partition before C3
+// gets a.
+
 joinServer 0
 joinServer 1
 joinServer 2
@@ -27,7 +31,6 @@ start
 put 4 a helloworld
 stabilize
 pause
-restoreConnection 0 1
 start
 stabilize
 get 3 a
