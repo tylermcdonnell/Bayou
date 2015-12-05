@@ -1,5 +1,7 @@
 package message;
 
+import server.VersionVector;
+
 public class GetResponse extends Message
 {
 	private static final long serialVersionUID = 1L;
@@ -7,10 +9,17 @@ public class GetResponse extends Message
 	public String songName;
 	public String url;
 	
-	public GetResponse(String songName, String url)
+	public VersionVector V;
+	
+	public boolean success;
+	
+	public GetResponse(String songName, String url, boolean success)
 	{
 		this.songName	= songName;
 		this.url		= url;
+		this.success 	= success;
+		
+		this.V			= new VersionVector();
 	}
 	
 	@Override

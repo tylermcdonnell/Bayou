@@ -1,5 +1,7 @@
 package message;
 
+import server.VersionVector;
+
 public class Delete extends WriteRequest
 {
 	private static final long serialVersionUID = 1L;

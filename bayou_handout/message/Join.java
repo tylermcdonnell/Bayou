@@ -12,7 +12,6 @@ public class Join extends WriteRequest
 	
 	public Join()
 	{
-		
 	}
 	
 	@Override

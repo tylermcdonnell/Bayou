@@ -181,7 +181,6 @@ public class Server implements Runnable {
 			//******************************************************************
 			for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
 			{
-				System.out.println("Received.");
 				int s 		= e.getKey();
 				Message m 	= e.getValue();
 				
@@ -203,19 +202,55 @@ public class Server implements Runnable {
 				//******************************************************************
 				if (m instanceof WriteRequest)
 				{
-					// TODO: Check session guarantees.
+					WriteRequest wr = (WriteRequest)m;
 					
-					write((Put)m);
-					this.network.sendMessageToProcess(s, new WriteResponse(true));
+					// Writes Follow Reads and Monotonic Writes guarantees.
+					if (this.V.dominates(wr.R()) && this.V.dominates(wr.W()))
+					{
+						// Accept Write.
+						Write w = write((Put)m);
+						 
+						// Update return vector for future session guarantees.
+						VersionVector newVector = wr.W();
+						newVector.update(this.ID, w.stamp());
+						
+						// Respond to client.
+						this.network.sendMessageToProcess(s, new WriteResponse(true, newVector));
+					}
+					else
+					{
+						// Drop Write.
+						this.network.sendMessageToProcess(s, new WriteResponse(false, wr.R()));
+					}
 				}
 				
 				if (m instanceof ReadRequest)
 				{
-					// TODO: Check session guarantees.
+					ReadRequest rr = (ReadRequest)m;
 					
-					if (m instanceof Get)
+					// Writes Follow Reads and Monotonic Writes guarantees.
+					if (this.V.dominates(rr.R()) && this.V.dominates(rr.W()))
 					{
-						this.network.sendMessageToProcess(s, get((Get)m));
+						// Accept Read.
+						if (m instanceof Get)
+						{
+							// Update return vector for future session guarantees.
+							VersionVector newVector = rr.R();
+							this.V.max(newVector);
+							
+							// Respond to client.
+							GetResponse r = get((Get)m);
+							r.V = newVector;
+							this.network.sendMessageToProcess(s, r);
+						}
+					}
+					else
+					{
+						// Report error for Read.
+						if (m instanceof Get)
+						{
+							this.network.sendMessageToProcess(s, new GetResponse(((Get)m).songName, "ERR_DEP", false));
+						}
 					}
 				}
 				
@@ -294,7 +329,7 @@ public class Server implements Runnable {
 	 */
 	private GetResponse get(Get g)
 	{
-		return new GetResponse(g.songName, this.playlist.get(g.songName));
+		return new GetResponse(g.songName, this.playlist.get(g.songName), true);
 	}
 	
 	/**

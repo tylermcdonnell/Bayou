@@ -3,8 +3,14 @@ package client;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
+import message.GetResponse;
+import message.Message;
 import message.WriteRequest;
+import message.WriteResponse;
+import server.VersionVector;
+import socketFramework.NetController;
 
 /**
  * Abstraction for Bayou client.
@@ -22,11 +28,29 @@ public class Client implements Runnable {
 	// This client's ID.
 	private int myClientId;
 	
+	// This client's network communication.
+	private NetController network;
+	
+	// This client's Read Version Vector.
+	// Used for session guarantees.
+	private VersionVector R;
+	
+	// This client's Write Version Vector.
+	// Used for session guarantees.
+	private VersionVector W;
+	
+	// Net Controller ID of the server this client is currently 
+	// communicating with.
+	private int currentServer;
+	
 	public Client(int myClientId, int myServerId)
 	{
 		this.clientReceiveQueue = new LinkedList<WriteRequest>();
 		this.myServerId = myServerId;
 		this.myClientId = myClientId;
+		
+		this.R = new VersionVector();
+		this.W = new VersionVector();
 	}
 	
 	
@@ -46,15 +70,57 @@ public class Client implements Runnable {
 			ArrayList<WriteRequest> masterMessages = getMasterWriteRequests();
 			
 			// Process messages from master.
-			for (int i = 0; i < masterMessages.size(); i++)
+			for (WriteRequest wr : masterMessages)
 			{
-				System.out.println("Client " + this.myClientId + " received from master: " + masterMessages.get(i));
+				System.out.println("Client " + this.myClientId + " received from master: " + wr.toString());
 				
+				// Session guarantees.
+				wr.setR(this.R);
+				wr.setW(this.W);
 				
+				// Dispatch request to server.
+				this.network.sendMessageToProcess(currentServer, wr);
 			}
+			
+			//******************************************************************
+			//* SERVER MESSAGES
+			//******************************************************************
+			for (Map.Entry<Integer, Message> e : this.network.getReceivedMessages())
+			{
+				int s 		= e.getKey();
+				Message m 	= e.getValue();
+				
+				if (m instanceof GetResponse)
+				{
+					GetResponse r = (GetResponse)m;
+					
+					if (r.success)
+					{
+						// Update Read Vector
+						this.R = r.V;
+					}
+					
+					System.out.println(r.toString());
+					
+					// TODO: Signal complete to Master.
+				}
+				
+				if (m instanceof WriteResponse)
+				{
+					WriteResponse r = (WriteResponse)m;
+					
+					if (r.success)
+					{
+						// Update Write Vector
+						this.W = r.V;
+					}
+					
+					// TODO: Signal complete to Master.
+				}
+			}
+			
 		}
 	}
-	
 	
 	/**
 	 * Send a client a command to fulfill.  The master class can use this.
