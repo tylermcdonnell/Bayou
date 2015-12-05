@@ -160,7 +160,7 @@ public class Server implements Runnable {
 			// problematic if the period is so low that the messages flood the system.
 			if (System.currentTimeMillis() >= this.nextAE)
 			{
-				this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
+				this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 				
 				// Choose target for anti-entropy exchange and initiate.
 				ArrayList<Integer> servers = this.network.getAliveServers();
@@ -190,7 +190,7 @@ public class Server implements Runnable {
 				if (m instanceof JoinResponse)
 				{
 					this.ID = ((JoinResponse)m).ID;
-					this.nextAE = System.currentTimeMillis() + this.ANTI_ENTROPY_PERIOD;
+					this.nextAE = System.currentTimeMillis() + Server.ANTI_ENTROPY_PERIOD;
 				}
 				if (this.ID == null)
 				{
