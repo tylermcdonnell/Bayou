@@ -21,7 +21,7 @@ breakConnection 0 1
 start
 put 2 Mine TaylorSwift.com
 joinClient 2 1
-put 2 BloodBrothers LukeBryan.com
+put 2 BloodBrothers LukeBryan.coms
 stabilize
 printLog 1
 printLog 1
