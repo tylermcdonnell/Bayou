@@ -22,4 +22,5 @@ start
 put 2 Mine TaylorSwift.com
 joinClient 2 1
 put 2 BloodBrothers LukeBryan.com
+stabilize
 printLog 1
