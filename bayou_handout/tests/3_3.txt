@@ -1,0 +1,9 @@
+joinServer 0
+joinServer 1
+joinClient 3 0
+pause
+breakConnection 0 1
+put 3 foo
+stabilize
+joinClient 3 1
+get 3 foo
