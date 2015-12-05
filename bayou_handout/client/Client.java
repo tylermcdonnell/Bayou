@@ -172,7 +172,9 @@ public class Client implements Runnable {
 		// Continuously listen for client commands from the master.
 		synchronized(this.clientReceiveQueue)
 		{	
-			return new ArrayList<Message>(this.clientReceiveQueue);
+			ArrayList<Message> get = new ArrayList<Message>(this.clientReceiveQueue);
+			this.clientReceiveQueue.clear();
+			return get;
 		}
 	}
 }
