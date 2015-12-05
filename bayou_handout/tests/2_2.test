@@ -35,3 +35,4 @@ restoreConnection 0 1
 start
 stabilize
 get 3 a
+clean

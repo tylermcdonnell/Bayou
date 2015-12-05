@@ -24,3 +24,5 @@ joinClient 2 1
 put 2 BloodBrothers LukeBryan.com
 stabilize
 printLog 1
+printLog 1
+clean

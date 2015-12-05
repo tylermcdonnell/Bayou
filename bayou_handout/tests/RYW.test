@@ -23,3 +23,4 @@ put 2 Mine TaylorSwift.com
 joinClient 2 1
 stabilize
 get 2 Mine
+clean

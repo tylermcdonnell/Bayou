@@ -32,6 +32,11 @@ public class Master
 	// Note that a server with ID = x will be stored at index x.
 	public static ArrayList<Server> serverProcesses = new ArrayList<Server>();
 	
+	// Keep track of client and server threads for clean up.
+	public static ArrayList<Thread> serverThreads = new ArrayList<Thread>();
+	public static ArrayList<Thread> clientThreads = new ArrayList<Thread>();
+	
+	
 	// The maximum number of nodes this system can handle.
 	// Note: this is how many ports the system will use. See NetController
 	// code for more information.
@@ -286,6 +291,11 @@ public class Master
 	            //}
 	            
 	            break;
+	            
+	         // MIKE: added for API, this is the "clean up" command.
+        	case "clean":
+        		clean();
+        		break;
         
             // MIKE: added for testing.
         	case "commTest":
@@ -297,15 +307,6 @@ public class Master
         	case "createServerTest":
         		
         		createServerTest();
-        		break;
-        		
-        	// MIKE: added for API, this is the "clean up" command.
-        	case "c":
-        	
-        		// TODO
-        		// Clean up all NetControllers and state -- create a fresh
-        		// slate.
-        	
         		break;
         	
         	case "s":
@@ -381,6 +382,9 @@ public class Master
         Thread newServerThread = new Thread(newServer);
         newServerThread.start();
         
+        // Remember all threads created for clean up.
+        Master.serverThreads.add(newServerThread);
+        
         newServer.waitUntilJoined();
 	}
 	
@@ -419,6 +423,9 @@ public class Master
 	        // Create client thread.
 	        Thread newClientThread = new Thread(newClient);
 	        newClientThread.start();
+	        
+	        // Remember all threads created for clean up.
+	        Master.clientThreads.add(newClientThread);
 		}
 		
 		Master.clientProcesses.get(clientId).connect(serverId);
@@ -631,6 +638,48 @@ public class Master
 			System.out.println("Error while running script.");
 			exc.printStackTrace();
 		}
+	}
+	
+	private static void clean()
+	{
+		// Close all NetControllers.
+		for (int i = 0; i < Master.netControllers.size(); i++)
+		{
+			Master.netControllers.get(i).shutdown();
+		}
+		
+		// Stop all Threads (except Master).
+		for (int i = 0; i < Master.serverThreads.size(); i++)
+		{
+			Master.serverThreads.get(i).stop();
+		}
+		
+		for (int i = 0; i < Master.clientThreads.size(); i++)
+		{
+			Master.clientThreads.get(i).stop();
+		}
+		
+		// Destroy all objects (servers & clients).
+		for (int i = 0; i < Master.clientProcesses.size(); i++)
+		{
+			// Master class is only one who has reference.
+			Master.clientProcesses.set(i, null);
+		}
+		
+		for (int i = 0; i < Master.serverProcesses.size(); i++)
+		{
+			// Master class is only one who has reference.
+			Master.serverProcesses.set(i, null);
+		}
+		
+		// Clear out all of Master state.
+		Master.primaryServerId = -1; 
+		Master.clientProcesses = new ArrayList<Client>();
+		Master.serverProcesses = new ArrayList<Server>();
+		Master.serverThreads = new ArrayList<Thread>();
+		Master.clientThreads = new ArrayList<Thread>();
+		Master.netControllers = new ArrayList<NetController>();
+		Master.aliveServerNetControllerIDs = new ArrayList<Integer>();
 	}
   
 }

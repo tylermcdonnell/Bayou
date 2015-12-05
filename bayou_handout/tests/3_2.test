@@ -12,3 +12,4 @@ get 3 hello
 get 3 goodbye
 printLog 1
 printLog 2
+clean

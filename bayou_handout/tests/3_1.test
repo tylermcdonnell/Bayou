@@ -8,3 +8,4 @@ put 2 hello world
 stabilize
 joinClient 2 1
 get 2 hello
+clean
