@@ -318,6 +318,8 @@ public class Server implements Runnable {
 						else
 						{
 							// Drop Write.
+							//System.out.println("WRITE DROPPED");
+							
 							this.network.sendMessageToProcess(s, new WriteResponse(false, wr.R()));
 						}
 					}
