@@ -184,7 +184,7 @@ public class Master
 		             * Print out a server's operation log in the format specified in the
 		             * hand out.
 		             */
-		            
+		            Master.serverProcesses.get(serverId).printLog();
 		            
 		            break;
             

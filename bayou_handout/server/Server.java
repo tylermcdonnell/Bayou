@@ -132,6 +132,14 @@ public class Server implements Runnable {
 		}
 	}
 	
+	public synchronized void printLog()
+	{
+		synchronized(this.DB)
+		{
+			this.DB.print();	
+		}
+	}
+	
 	@Override
 	public void run()
 	{
